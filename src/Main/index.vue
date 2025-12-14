@@ -22,6 +22,7 @@ const currentImageIndex = ref(0);
 const showPrevNext = ref(false);
 const rotation = ref(0);
 const mirror = ref(false);
+const scale = ref(1);
 const switchTab = (tab) => {
   currentTab.value = tab
 }
@@ -33,6 +34,7 @@ const openPreview = (index) => {
   showPrevNext.value = detailInfo.value.pics.length > 1;
   rotation.value = 0;
   mirror.value = false;
+  scale.value = 1;
 }
 
 const openPreviewCover = (url) => {
@@ -41,6 +43,7 @@ const openPreviewCover = (url) => {
   showPrevNext.value = false;
   rotation.value = 0;
   mirror.value = false;
+  scale.value = 1;
 }
 
 const closePreview = () => {
@@ -49,6 +52,7 @@ const closePreview = () => {
   currentImageIndex.value = 0;
   rotation.value = 0;
   mirror.value = false;
+  scale.value = 1;
 }
 
 const prevImage = () => {
@@ -62,11 +66,18 @@ const nextImage = () => {
 }
 
 const rotateImage = () => {
-  rotation.value = (rotation.value + 90) % 360;
+  rotation.value += 90;
 }
 
 const mirrorImage = () => {
   mirror.value = !mirror.value;
+}
+
+const handleWheel = (event) => {
+  if (!showPreview.value) return;
+  event.preventDefault();
+  const delta = event.deltaY > 0 ? -0.1 : 0.1;
+  scale.value = Math.max(0.1, Math.min(3, scale.value + delta));
 }
 
 const handleKeydown = (event) => {
@@ -163,7 +174,7 @@ const testPlatform = () => {
             <div class="released-info-item-name">{{ detailInfo?.author?.name }}</div>
           </div>
           <!-- 文案 -->
-          <div class="main-card-text">{{ detailInfo.title }}</div>
+          <div class="title-text">{{ detailInfo.title }}</div>
         </div>
       </div>
       <div class="right">
@@ -193,8 +204,8 @@ const testPlatform = () => {
   </div>
   <!-- 图片预览模态框 -->
   <div v-if="showPreview" class="modal" @click="closePreview">
-    <div class="modal-content" @click.stop>
-      <img :src="previewImage" alt="预览" class="preview-img" :style="{ transform: `rotate(${rotation}deg) scaleX(${mirror ? -1 : 1})` }">
+    <div class="modal-content" @click.stop @wheel="handleWheel">
+      <img :src="previewImage" alt="预览" class="preview-img" :style="{ transform: `scale(${scale}) rotate(${rotation}deg) scaleX(${mirror ? -1 : 1})` }">
       <button class="close-btn" @click="closePreview">×</button>
       <button v-if="showPrevNext" class="nav-btn prev-btn" @click="prevImage">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -207,7 +218,7 @@ const testPlatform = () => {
         </svg>
       </button>
       <div class="image-index" v-if="showPrevNext">
-        {{ currentImageIndex + 1 + '/' + detailInfo.pics.length }}
+        {{ currentImageIndex + 1 + ' / ' + detailInfo.pics.length }}
       </div>
       <!-- 工具条 -->
       <div class="toolbar">
@@ -314,7 +325,7 @@ const testPlatform = () => {
           display: flex;
           align-items: center;
           gap: 10px;
-          margin-bottom: 5px;
+          margin-bottom: 10px;
 
           .avatar {
             width: 30px;
@@ -322,6 +333,10 @@ const testPlatform = () => {
             border-radius: 50%;
           }
         }
+
+        // .title-text {
+        //   background-color: hotpink;
+        // }
       }
     }
     .right {

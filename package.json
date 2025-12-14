@@ -1,5 +1,10 @@
 {
+  "name": "video-parse-utools",
   "type": "module",
+  "author": {
+    "name": "青明尘下",
+    "email": "qmcx.ming@qq.com"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build"
