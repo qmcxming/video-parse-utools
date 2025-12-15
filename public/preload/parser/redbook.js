@@ -13,11 +13,8 @@ class RedBookParser {
   async parse(sharedUrl) {
     // 1、获取重定向URL
     let url = convertUrl(sharedUrl);
-    console.log('原始的url', url);
     try {
       url = await getRedirectUrl(url, getRandomUserAgent());
-      console.log('重定向的url', url);
-      
     } catch (e) {
       throw new Error(e.message);
     }
@@ -107,7 +104,8 @@ class RedBookParser {
       convertUrl(videoUrl),
       cover,
       images,
-      author
+      author,
+      'xiaohongshu'
     );
   }
 

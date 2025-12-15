@@ -1,6 +1,8 @@
 const DouYinParser = require('./douyin');
 const RedBookParser = require('./redbook');
 const JiMengParser = require('./jimeng');
+const ZuiYouParser = require('./zuiyou');
+const BiliBiliParser = require('./bilibili');
 
 /**
  * 解析信息
@@ -13,6 +15,10 @@ async function parseInfo(sharedUrl) {
     return await new RedBookParser().parse(sharedUrl);
   } else if (sharedUrl.includes('jimeng.jianying.com')) {
     return await new JiMengParser().parse(sharedUrl);
+  } else if (sharedUrl.includes('xiaochuankeji.cn')) {
+    return await new ZuiYouParser().parse(sharedUrl);
+  } else if (sharedUrl.includes('bilibili.com') || sharedUrl.includes('b23.tv')) {
+    return await new BiliBiliParser().parse(sharedUrl);
   } else {
     throw new Error("暂不支持该平台");
   }

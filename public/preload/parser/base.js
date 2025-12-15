@@ -58,13 +58,14 @@ function convertUrl(url) {
 }
 
 class Video {
-  constructor(videoId, title, downloadUrl, cover, pics, author) {
+  constructor(videoId, title, downloadUrl, cover, pics, author, platform = 'default') {
     this.videoId = videoId;
     this.title = title;
     this.downloadUrl = downloadUrl;
     this.cover = cover;
     this.pics = pics;
     this.author = author;
+    this.platform = platform;
   }
 }
 

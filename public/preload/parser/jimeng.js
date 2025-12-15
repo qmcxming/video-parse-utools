@@ -11,9 +11,6 @@ class JiMengParser {
    * @returns {Promise<Video>} 视频信息
    */
   async parse(sharedUrl) {
-    console.log('JiMengParser');
-    console.log(sharedUrl);
-
     // 1、获取重定向URL
     let url;
     try {
@@ -32,7 +29,6 @@ class JiMengParser {
       throw new Error("未找到有效的分享链接");
     }
     let jsonStr = match[1].trim();
-    console.log('转换前：' + jsonStr);
 
     // 4、处理JSON字符串
     let fixed = jsonStr.replace(/\\"/g, '"')
@@ -40,7 +36,6 @@ class JiMengParser {
       .replace(/\\n/g, '')
       .replace(/\\r/g, '')
       .replace(/\\u002F/g, '/');
-    console.log('转换之后：' + fixed);
 
     // 5、解析JSON
     let root;

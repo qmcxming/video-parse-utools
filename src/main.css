@@ -34,6 +34,14 @@ textarea {
   ::-webkit-scrollbar-thumb {
     border-color: #f4f4f4;
   }
+
+  :root {
+    --color: #000000;
+    --bg: #F5F7FA;
+    --main-card-bg: #fff;
+    --other-bg: #F5F7FA;
+    --input-bg: #F9FAFB;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -48,6 +56,14 @@ textarea {
 
   body {
     background-color: #303133;
-    color: #fff;
+    /* color: #fff; */
+  }
+
+  :root {
+    --color: #ffffff;
+    --bg: #303133;
+    --main-card-bg: #181818;
+    --other-bg: #282828;
+    --input-bg: #282828;
   }
 }

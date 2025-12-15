@@ -27,8 +27,6 @@ class DouYinParser {
     let finalUrl;
     try {
       finalUrl = await this.getNewUrl(sharedUrl);
-      console.log(finalUrl);
-      
     } catch (e) {
       throw new Error("未找到有效的分享链接");
     }

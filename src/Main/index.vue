@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import Dialog from '../components/Dialog/index.vue';
 
 defineProps({
   enterAction: {
@@ -14,7 +15,6 @@ const content = ref('');
 
 const detailInfo = ref(null);
 const loading = ref(false);
-const errTip = ref('');
 
 const previewImage = ref('');
 const showPreview = ref(false);
@@ -28,6 +28,7 @@ const dragStartX = ref(0);
 const dragStartY = ref(0);
 const imageX = ref(0);
 const imageY = ref(0);
+const toast = ref({ show: false, message: '', type: 'info' });
 const switchTab = (tab) => {
   currentTab.value = tab
 }
@@ -151,6 +152,16 @@ const platformList = [
     id: 'jimeng',
     name: '即梦',
     content: 'https://jimeng.jianying.com/s/59q6OoJtnok/'
+  },
+  {
+    id: 'zuiyou',
+    name: '最右',
+    content: '#最右#分享一条有趣的内容给你，不好看算我输。请戳链接>>https://share.xiaochuankeji.cn/hybrid/share/post?pid=413110582'
+  },
+  {
+    id: 'bilibili',
+    name: '哔哩哔哩',
+    content: '【淀粉肠包蛋 暂时不考虑收徒】 https://www.bilibili.com/video/BV1HD27BNETV/?share_source=copy_web&vd_source=78607971dc08a56a924ddc1a0786ef5f'
   }
 ]
 
@@ -175,19 +186,22 @@ const parseInfo = async () => {
 }
 
 const showError = (message) => {
-  errTip.value = message;
-  setTimeout(() => {
-    errTip.value = '';
-  }, 3000); 
+  showToast(message, 'error');
 }
 
-const copyText = (livePhoto) => {
+const copyLink = (livePhoto) => {
   // TODO 暂时不考虑livePhoto
   if (livePhoto) {
-    navigator.clipboard.writeText(livePhoto);
+    copyText(livePhoto);
   } else {
-    navigator.clipboard.writeText(previewImage.value);
+    copyText(previewImage.value);
   }
+  showToast('已复制到剪贴板');
+}
+
+const copyText = (text) => {
+  navigator.clipboard.writeText(text);
+  showToast('已复制到剪贴板');
 }
 
 const testPlatform = (index) => { 
@@ -216,10 +230,37 @@ const download = async (livePhoto) => {
   console.log(res);
   if (res) {
     window.utools.shellShowItemInFolder(res);
+    showToast('下载成功');
     if (livePhoto) {
       livePhotoLoading.value = false;
     } else {
       picLoading.value = false;
+    }
+  } else {
+    showToast('下载失败', 'error');
+    if (livePhoto) {
+      livePhotoLoading.value = false;
+    } else {
+      picLoading.value = false;
+    }
+  }
+}
+
+const showToast = (message, type = 'info') => {
+  toast.value.show = true;
+  toast.value.message = message;
+  toast.value.type = type;
+  setTimeout(() => {
+    toast.value.show = false;
+  }, 3000);
+}
+
+const copyAuthorUrl = () => {
+  const platform = detailInfo.value.platform;
+  if (platform !== 'default') {
+    if (platform === 'xiaohongshu') {
+      navigator.clipboard.writeText('https://www.xiaohongshu.com/user/profile/' + detailInfo.value.author.id);
+      showToast('已复制到剪贴板');
     }
   }
 }
@@ -230,7 +271,6 @@ const download = async (livePhoto) => {
       <div class="left">
         <div class="main-card-title">
           轻溪去水印
-          <div class="error">{{ errTip }}</div>
         </div>
         <!-- 声明 -->
         <div class="main-card-desc">本工具仅用于学习交流，请勿用于商业用途。</div>
@@ -250,12 +290,27 @@ const download = async (livePhoto) => {
           <div class="user-info">
             <img v-if="detailInfo?.author?.avatar" class="avatar" :src="detailInfo?.author?.avatar" alt="头像"></img>
             <div class="released-info-item-name">{{ detailInfo?.author?.name }}</div>
+            <!-- 复制 -->
+            <div class="copy-icon" v-if="detailInfo?.platform !== 'default'" title="复制作者主页链接" @click="copyAuthorUrl">
+              <svg xmlns="http://www.w3.org/2000/svg"  width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+            </div>
           </div>
           <!-- 文案 -->
-          <div class="title-text">{{ detailInfo.title }}</div>
+          <div class="title-text">
+            {{ detailInfo.title }}
+            <span style="cursor: pointer;" title="复制文案" @click="copyText(detailInfo.title)">
+              <svg xmlns="http://www.w3.org/2000/svg"  width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+            </span>
+          </div>
         </div>
         <!-- <button class="setting-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-5 h-5" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-5 h-5" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
         </button> -->
       </div>
       <div class="right">
@@ -273,7 +328,7 @@ const download = async (livePhoto) => {
               <!-- 保存、复制 -->
               <div v-if="item.livePhotoUrl" class="save-and-copy">
                 <div class="save-btn" @click="download(item.livePhotoUrl)">保存</div>
-                <div class="copy-btn" @click="copyText(item.livePhotoUrl)">复制</div>
+                <div class="copy-btn" @click="copyLink(item.livePhotoUrl)">复制</div>
               </div>
             </div>
           </div>
@@ -326,7 +381,7 @@ const download = async (livePhoto) => {
             <line x1="2" x2="22" y1="9" y2="9"/>
           </svg>
         </button>
-        <button class="tool-btn" @click="copyText()" title="复制">
+        <button class="tool-btn" @click="copyLink()" title="复制">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
@@ -342,6 +397,12 @@ const download = async (livePhoto) => {
       </div>
     </div>
   </div>
+  <!-- Toast 提示 -->
+  <transition name="toast">
+    <div v-if="toast.show" class="toast" :class="toast.type">
+      {{ toast.message }}
+    </div>
+  </transition>
 </template>
 <style lang="scss" scoped>
   $radius: 10px;
@@ -377,12 +438,6 @@ const download = async (livePhoto) => {
         display: flex;
         align-items: center;
         gap: 10px;
-
-        .error {
-          color: red;
-          font-size: 12px;
-          font-weight: normal;
-        }
       }
 
       .main-card-desc {
@@ -393,7 +448,7 @@ const download = async (livePhoto) => {
 
       .platform {
         display: flex;
-        // justify-content: space-between;
+        justify-content: space-between;
         align-items: center;
         margin: 5px 0;
 
@@ -418,6 +473,11 @@ const download = async (livePhoto) => {
       .parse-info {
         height: 200px;
         overflow: auto;
+
+        .copy-icon {
+          display: flex;
+          cursor: pointer;
+        }
 
         .user-info {
           display: flex;
@@ -472,6 +532,9 @@ const download = async (livePhoto) => {
     border-radius: 5px;
     font-size: 14px;
     transition: all .3s;
+  }
+  #input::-webkit-scrollbar {
+    display: none;
   }
   #input:focus {
     border: 1px solid #1E293B;
@@ -770,7 +833,7 @@ const download = async (livePhoto) => {
     align-items: center;
     padding: 5px;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 50%;
     transition: all 0.3s;
     color: #94a3b8;
     position: absolute;
@@ -780,6 +843,44 @@ const download = async (livePhoto) => {
 
   .setting-btn:hover {
     background-color: #e5e7eb;
-    color: #001428;
+    color: #2151D1;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    z-index: 1000;
+    font-size: 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .toast-enter-active, .toast-leave-active {
+    transition: all 0.3s ease;
+  }
+
+  .toast-enter-from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  .toast-leave-to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  .toast.info {
+    background-color: #000000;// #3875F6
+  }
+
+  .toast.success {
+    background-color: #4B9E5F;
+  }
+
+  .toast.error {
+    background-color: #FF4D4F;
   }
 </style>
