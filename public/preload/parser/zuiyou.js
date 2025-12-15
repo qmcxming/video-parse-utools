@@ -1,5 +1,5 @@
 const https = require('https');
-const { convertUrl } = require('./base');
+const { convertUrl, Video } = require('./base');
 
 /**
  * 最右解析器
@@ -65,15 +65,7 @@ class ZuiYouParser {
         });
       });
     }
-
-    return {
-      id: data.id,
-      title: data.content,
-      downloadUrl: downloadUrl,
-      cover: cover,
-      pics: pics,
-      author: author
-    };
+    return new Video(data.id, data.content, downloadUrl, cover, pics, author);
   }
 
   /**

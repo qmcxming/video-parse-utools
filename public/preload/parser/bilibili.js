@@ -1,5 +1,5 @@
 const https = require('https');
-const { getRedirectUrl, convertUrl } = require('./base');
+const { getRedirectUrl, convertUrl, Video } = require('./base');
 
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
     "(KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36";
@@ -50,15 +50,7 @@ class BiliBiliParser {
       name: owner.name,
       avatar: convertUrl(owner.face)
     };
-
-    return {
-      id: videoId,
-      title: title,
-      downloadUrl: downloadUrl,
-      cover: cover,
-      pics: [],
-      author: author
-    };
+    return new Video(videoId, title, downloadUrl, cover, [], author)
   }
 
   getVideoId(url) {

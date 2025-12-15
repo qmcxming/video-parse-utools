@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import Dialog from '../components/Dialog/index.vue';
 
 defineProps({
   enterAction: {
@@ -274,7 +273,7 @@ const copyAuthorUrl = () => {
         </div>
         <!-- 声明 -->
         <div class="main-card-desc">本工具仅用于学习交流，请勿用于商业用途。</div>
-        <textarea v-model="content" name="ipt" id="input" placeholder="在此粘贴视频分享链接..."></textarea>
+        <textarea v-model="content" name="ipt" id="input" placeholder="在此粘贴视频分享链接..." @keydown.enter.prevent="parseInfo"></textarea>
         <button class="parse-btn" :disabled="loading" @click="parseInfo">
           <svg v-if="!loading" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search w-4 h-4" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
           <svg v-else t="1765683055654" class="icon loading" viewBox="0 0 1024 1024" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12849" width="15" height="15"><path d="M469.333333 128a42.666667 42.666667 0 0 1 42.666667-42.666667c235.648 0 426.666667 191.018667 426.666667 426.666667a42.666667 42.666667 0 1 1-85.333334 0 341.333333 341.333333 0 0 0-341.333333-341.333333 42.666667 42.666667 0 0 1-42.666667-42.666667z" p-id="12850"></path></svg>
@@ -344,6 +343,9 @@ const copyAuthorUrl = () => {
           <div class="tab-item" v-if="detailInfo.pics && detailInfo.pics.length !== 0" :class="{ active: currentTab === 'pic' }" @click="switchTab('pic')">图片预览</div>
           <div class="tab-item" v-if="detailInfo.cover" :class="{ active: currentTab === 'cover' }" @click="switchTab('cover')">封面预览</div>
         </div>
+        <!-- <div class="parse-tip">
+          注意：频繁解析可能导致平台限制，建议合理使用。
+        </div> -->
       </div>
     </div>
   </div>
@@ -882,5 +884,14 @@ const copyAuthorUrl = () => {
 
   .toast.error {
     background-color: #FF4D4F;
+  }
+
+  .parse-tip {
+    position: absolute;
+    top: 2px;
+    left: 20px;
+    white-space: nowrap;
+    color: #94a3b8;
+    font-size: 10px;
   }
 </style>
