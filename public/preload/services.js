@@ -40,7 +40,8 @@ window.services = {
         const seconds = String(date.getSeconds()).padStart(2, '0');
         filename = `文件${year}${month}${day}${hours}${minutes}${seconds}` + (type === 'video' ? '.mp4' : '.jpg');
       }
-      const filePath = path.join(window.utools.dbStorage.getItem('downloadPath'), filename);
+      const downloadPath = window.utools.dbStorage.getItem('downloadPath') || window.utools.getPath('downloads');
+      const filePath = path.join(downloadPath, filename);
       
       const file = fs.createWriteStream(filePath);
       https.get(url, (response) => {

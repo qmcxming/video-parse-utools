@@ -246,18 +246,27 @@ const download = async (livePhoto) => {
     picLoading.value = true;
     url = previewImage.value;
   }
-  const res = await window.services.downloadVideo(url, type);
-  console.log(res);
-  if (res) {
-    window.utools.shellShowItemInFolder(res);
-    showToast('下载成功');
-    if (livePhoto) {
-      livePhotoLoading.value = false;
+  try {
+    const res = await window.services.downloadVideo(url, type);
+    console.log(res);
+    if (res) {
+      window.utools.shellShowItemInFolder(res);
+      showToast('下载成功');
+      if (livePhoto) {
+        livePhotoLoading.value = false;
+      } else {
+        picLoading.value = false;
+      }
     } else {
-      picLoading.value = false;
+      showToast('下载失败', 'error');
+      if (livePhoto) {
+        livePhotoLoading.value = false;
+      } else {
+        picLoading.value = false;
+      }
     }
-  } else {
-    showToast('下载失败', 'error');
+  } catch(e) {
+    showToast('下载失败' + e.message, 'error');
     if (livePhoto) {
       livePhotoLoading.value = false;
     } else {

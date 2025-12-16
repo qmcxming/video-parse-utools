@@ -34,6 +34,7 @@ const selectFolder = () => {
   if (path) {
     downloadPath.value = path[0];
     onChange();
+    showToast('已选择新的下载路径');
   }
 };
 
