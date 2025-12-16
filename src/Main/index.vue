@@ -436,7 +436,7 @@ const handlerLoadData = (e) => {
       {{ toast.message }}
     </div>
   </transition>
-  <Dialog width="360px" title="偏好" v-model:visible="showDialog" @confirm="showDialog = false" confirm-text="关闭">
+  <Dialog width="360px" title="设置" v-model:visible="showDialog" @confirm="showDialog = false" confirm-text="关闭">
     <Preference @load-data="handlerLoadData" />
   </Dialog>
 </template>

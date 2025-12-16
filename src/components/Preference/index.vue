@@ -1,9 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 
-const emit = defineEmits([
-  'loadData'
-]);
+const emit = defineEmits(['loadData']);
 
 const toast = ref({ show: false, message: '', type: 'info' });
 
@@ -14,7 +12,7 @@ const showToast = (message, type = 'info') => {
   setTimeout(() => {
     toast.value.show = false;
   }, 3000);
-}
+};
 
 const currentMenu = ref('setting');
 
@@ -43,16 +41,21 @@ const history = ref([]);
 
 const deleteHistory = (index) => {
   console.log(history.value);
-  
+
   history.value.splice(index, 1);
-  window.utools.dbStorage.setItem('history', JSON.parse(JSON.stringify(history.value)));
+  window.utools.dbStorage.setItem(
+    'history',
+    JSON.parse(JSON.stringify(history.value))
+  );
 };
 
 const clearHistory = () => {
   window.utools.dbStorage.setItem('history', []);
   history.value = [];
   showToast('已清空解析记录');
-}
+};
+
+const showConfirmPopover = ref(false);
 
 onMounted(() => {
   downloadPath.value =
@@ -120,10 +123,28 @@ onMounted(() => {
       <div v-if="currentMenu === 'about'" class="about">
         <h3>轻溪去水印</h3>
         <p>版本: 1.0.0</p>
-        <p>本工具用于学习交流，请勿用于商业用途。</p>
-        <p>注意：频繁解析可能导致平台限制，建议合理使用。</p>
+        <p>本工具仅用于学习交流，请勿用于商业用途。</p>
+        <p>注意：频繁解析可能导致平台限制，建议合理使用哦。</p>
         <div class="popover-container">
-          <span class="popover-title">小程序</span>
+          <span class="popover-title">
+            <svg
+              t="1765890115390"
+              class="icon"
+              viewBox="0 0 1024 1024"
+              version="1.1"
+              xmlns="http://www.w3.org/2000/svg"
+              p-id="4655"
+              width="14"
+              height="14"
+            >
+              <path
+                d="M626.176 279.552c74.24 0 134.656 55.808 134.656 124.928 0 21.504-6.144 42.496-17.408 61.44-16.896 27.648-44.032 48.128-76.8 57.856-8.704 2.56-15.36 3.584-21.504 3.584-14.336 0-25.6-11.264-25.6-25.6s11.264-25.6 25.6-25.6c1.024 0 3.072 0 5.632-1.024 22.016-6.144 39.424-18.944 49.152-35.84 6.656-10.752 9.728-22.528 9.728-34.816 0-40.448-37.376-73.728-82.944-73.728-15.872 0-31.232 4.096-45.056 11.776-24.064 13.824-38.4 36.864-38.4 61.952v214.528c0 43.52-24.064 83.456-64 105.984-21.504 12.288-45.568 18.432-70.144 18.432-74.24 0-134.656-55.808-134.656-124.928 0-21.504 6.144-42.496 17.408-61.44 16.896-27.648 44.032-48.128 76.8-57.856 9.216-2.56 15.36-3.584 21.504-3.584 14.336 0 25.6 11.264 25.6 25.6s-11.264 25.6-25.6 25.6c-1.024 0-3.072 0-5.632 1.024-22.016 6.656-39.424 19.456-49.152 35.84-6.656 10.752-9.728 22.528-9.728 34.816 0 40.448 37.376 73.728 83.456 73.728 15.872 0 31.232-4.096 45.056-11.776 24.064-13.824 38.4-36.864 38.4-61.952V404.48c0-43.52 24.064-83.456 64-105.984 20.992-12.8 45.056-18.944 69.632-18.944z m-520.704 230.4c0 226.304 183.296 409.6 409.6 409.6s409.6-183.296 409.6-409.6-183.296-409.6-409.6-409.6-409.6 183.296-409.6 409.6z m-51.2 0c0-254.464 206.336-460.8 460.8-460.8s460.8 206.336 460.8 460.8-206.336 460.8-460.8 460.8-460.8-206.336-460.8-460.8z m0 0"
+                fill="currentColor"
+                p-id="4656"
+              ></path>
+            </svg>
+            小程序
+          </span>
           <div class="popover-content">
             <img class="img" src="/miniprogram.png" alt="小程序" />
           </div>
@@ -141,15 +162,44 @@ onMounted(() => {
           </div>
           <div class="item-bottom">
             <div class="item-time">{{ item.time }}</div>
-            <div class="delete-btn" title="删除当前记录" @click="deleteHistory(index)">
+            <div
+              class="delete-btn"
+              title="删除当前记录"
+              @click="deleteHistory(index)"
+            >
               ×
             </div>
           </div>
         </div>
       </div>
       <div class="history-toolbar">
-        <div v-if="currentMenu === 'history' && history.length > 0" class="clear-btn" @click="clearHistory" title="一键清空">清空</div>
-        <span v-if="currentMenu === 'history'" class="history-tip">显示最近50条记录</span>
+        <div
+          class="confirm-popover"
+          v-if="currentMenu === 'history' && history.length > 0"
+        >
+          <div
+            class="clear-btn"
+            @click="showConfirmPopover = true"
+            title="一键清空"
+          >
+            清空
+          </div>
+          <div
+            class="confirm-popover-content"
+            :class="showConfirmPopover ? 'confirm-popover-show' : ''"
+          >
+            <div class="confirm-title">💬 确认清空解析记录？</div>
+            <div class="confirm-btn-group">
+              <div class="cancel-btn" @click="showConfirmPopover = false">
+                取消
+              </div>
+              <div class="confirm-btn" @click="clearHistory">确认</div>
+            </div>
+          </div>
+        </div>
+        <span v-if="currentMenu === 'history'" class="history-tip"
+          >只显示最近50条记录</span
+        >
       </div>
     </div>
   </div>
@@ -169,9 +219,10 @@ onMounted(() => {
 
 .menu {
   width: 120px;
-  background-color: #f8f9fa;
+  // background-color: #f8f9fa;
   padding: 20px 0;
   border-right: 1px solid #e9ecef;
+  padding-top: 0;
 }
 
 .menu-item {
@@ -197,6 +248,7 @@ onMounted(() => {
 .menu-content {
   flex: 1;
   padding: 20px;
+  padding-top: 0;
   background-color: #ffffff;
   position: relative;
 }
@@ -265,6 +317,13 @@ onMounted(() => {
 
   .popover-title {
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .icon {
+      margin-top: 2px;
+    }
   }
 
   .popover-content {
@@ -319,12 +378,14 @@ onMounted(() => {
   padding: 5px 10px;
   color: white;
   cursor: pointer;
+  border-radius: 3px;
+  font-size: 10px;
 }
 
 .history {
   height: 280px;
   overflow-y: auto;
-  margin-top: 15px;
+  margin-top: 30px;
 
   .no-data {
     text-align: center;
@@ -360,7 +421,7 @@ onMounted(() => {
         background-color: #0f172a;
         color: #fff;
         padding: 6px 12px;
-        border-radius: 4px;
+        border-radius: 3px;
         cursor: pointer;
         font-size: 10px;
         transition: background-color 0.3s, transform 0.1s;
@@ -403,5 +464,57 @@ onMounted(() => {
 
 .history::-webkit-scrollbar {
   display: none;
+}
+
+.confirm-popover-content {
+  width: 150px;
+  position: absolute;
+  left: -50%;
+  top: 30px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: scale(0);
+  padding: 10px;
+  transition: transform 0.3s;
+  .confirm-title {
+    font-size: 14px;
+    color: #606266;
+    transition: display 0.3s;
+  }
+
+  .confirm-btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: flex-end;
+    transition: display 0.3s;
+
+    .confirm-btn {
+      background-color: #0f172a;
+      color: #fff;
+    }
+
+    .confirm-btn,
+    .cancel-btn {
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-size: 12px;
+      &:hover {
+        background-color: #e9ecef;
+      }
+    }
+
+    .confirm-btn:hover {
+      background-color: #1e293b;
+      color: #fff;
+    }
+  }
+}
+
+.confirm-popover-show {
+  transform: scale(1);
 }
 </style>

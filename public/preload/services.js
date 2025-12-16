@@ -30,7 +30,15 @@ window.services = {
       // 从URL提取文件名，如果没有则使用时间戳
       let filename = '';
       if (!filename || filename === '/') {
-        filename = Date.now().toString() + (type === 'video' ? '.mp4' : '.jpg');
+        // 文件20251216220506.mp4
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        filename = `文件${year}${month}${day}${hours}${minutes}${seconds}` + (type === 'video' ? '.mp4' : '.jpg');
       }
       const filePath = path.join(window.utools.dbStorage.getItem('downloadPath'), filename);
       
