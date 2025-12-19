@@ -1,7 +1,9 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref } from 'vue';
 import Dialog from '../components/Dialog/index.vue';
 import Preference from '../components/Preference/index.vue';
+import ImagePreview from '../components/ImagePreview/index.vue';
+import showToast from '../utils/toast';
 
 defineProps({
   enterAction: {
@@ -18,125 +20,32 @@ const detailInfo = ref(null);
 const loading = ref(false);
 
 const previewImage = ref('');
-const showPreview = ref(false);
-const currentImageIndex = ref(0);
-const showPrevNext = ref(false);
-const rotation = ref(0);
-const mirror = ref(false);
-const scale = ref(1);
-const isDragging = ref(false);
-const dragStartX = ref(0);
-const dragStartY = ref(0);
-const imageX = ref(0);
-const imageY = ref(0);
-const toast = ref({ show: false, message: '', type: 'info' });
 const switchTab = (tab) => {
   currentTab.value = tab
 }
 
-const openPreview = (index) => {
-  currentImageIndex.value = index;
-  previewImage.value = detailInfo.value.pics[index].url;
-  showPreview.value = true;
-  showPrevNext.value = detailInfo.value.pics.length > 1;
-  rotation.value = 0;
-  mirror.value = false;
-  scale.value = 1;
-  imageX.value = 0;
-  imageY.value = 0;
-}
+const type = ref('pic');
+const current = ref(0);
+const previewList = ref([]);
+const visible = ref(false);
 
-const openPreviewCover = (url) => {
-  previewImage.value = url;
-  showPreview.value = true;
-  showPrevNext.value = false;
-  rotation.value = 0;
-  mirror.value = false;
-  scale.value = 1;
-  imageX.value = 0;
-  imageY.value = 0;
-}
-
-const closePreview = () => {
-  showPreview.value = false;
-  previewImage.value = '';
-  currentImageIndex.value = 0;
-  rotation.value = 0;
-  mirror.value = false;
-  scale.value = 1;
-  imageX.value = 0;
-  imageY.value = 0;
-}
-
-const prevImage = () => {
-  currentImageIndex.value = currentImageIndex.value > 0 ? currentImageIndex.value - 1 : detailInfo.value.pics.length - 1;
-  previewImage.value = detailInfo.value.pics[currentImageIndex.value].url;
-  imageX.value = 0;
-  imageY.value = 0;
-}
-
-const nextImage = () => {
-  currentImageIndex.value = currentImageIndex.value < detailInfo.value.pics.length - 1 ? currentImageIndex.value + 1 : 0;
-  previewImage.value = detailInfo.value.pics[currentImageIndex.value].url;
-  imageX.value = 0;
-  imageY.value = 0;
-}
-
-const rotateImage = () => {
-  rotation.value += 90;
-}
-
-const mirrorImage = () => {
-  mirror.value = !mirror.value;
-}
-
-const handleWheel = (event) => {
-  if (!showPreview.value) return;
-  event.preventDefault();
-  const delta = event.deltaY > 0 ? -0.1 : 0.1;
-  scale.value = Math.max(0.1, Math.min(3, scale.value + delta));
-}
-
-const startDrag = (event) => {
-  if (!showPreview.value) return;
-  isDragging.value = true;
-  dragStartX.value = event.clientX - imageX.value;
-  dragStartY.value = event.clientY - imageY.value;
-  event.preventDefault();
-}
-
-const drag = (event) => {
-  if (!isDragging.value || !showPreview.value) return;
-  imageX.value = event.clientX - dragStartX.value;
-  imageY.value = event.clientY - dragStartY.value;
-}
-
-const stopDrag = () => {
-  isDragging.value = false;
-}
-
-const handleKeydown = (event) => {
-  if (!showPreview.value) return;
-  if (event.key === 'ArrowLeft') {
-    prevImage();
-  } else if (event.key === 'ArrowRight') {
-    nextImage();
-  } else if (event.key === 'Escape') {
-    closePreview();
+const open = (mode, index) => {
+  if (mode === 'pic') {
+    previewList.value = detailInfo.value.pics.map(item => item.url);
   }
+  if (mode === 'cover') {
+    previewList.value = [detailInfo.value.cover];
+  }
+  if (mode === 'live') {
+    previewList.value = detailInfo.value.pics.map(item => item.livePhotoUrl);
+  }
+  if (mode === 'video') {
+    previewList.value = [detailInfo.value.downloadUrl];
+  }
+  visible.value = true;
+  type.value = mode;
+  current.value = index;
 }
-
-onMounted(() => {
-  document.addEventListener('keydown', handleKeydown);
-  document.addEventListener('mousemove', drag);
-  document.addEventListener('mouseup', stopDrag);
-})
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown);
-  document.removeEventListener('mousemove', drag);
-  document.removeEventListener('mouseup', stopDrag);
-})
 
 const platformList = [
   {
@@ -210,12 +119,7 @@ const showError = (message) => {
 }
 
 const copyLink = (livePhoto) => {
-  // TODO 暂时不考虑livePhoto
-  if (livePhoto) {
-    copyText(livePhoto);
-  } else {
-    copyText(previewImage.value);
-  }
+  copyText(livePhoto);
   showToast('已复制到剪贴板');
 }
 
@@ -273,15 +177,6 @@ const download = async (livePhoto) => {
       picLoading.value = false;
     }
   }
-}
-
-const showToast = (message, type = 'info') => {
-  toast.value.show = true;
-  toast.value.message = message;
-  toast.value.type = type;
-  setTimeout(() => {
-    toast.value.show = false;
-  }, 3000);
 }
 
 const copyAuthorUrl = () => {
@@ -356,23 +251,29 @@ const handlerLoadData = (e) => {
         <div class="detail-info" v-if="detailInfo">
           <div v-show="currentTab === 'video'" class="video-wrapper">
             <video v-if="detailInfo.downloadUrl" class="video" controls :src="detailInfo.downloadUrl"></video>
+            <div class="full" @click="open('video', 0)">
+              <svg t="1766170170744" class="icon" viewBox="0 0 1024 1024" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2793" width="14" height="14"><path d="M181 357.5V181.2h176.4c14.3 0 25.9-11.6 25.9-25.9v-31.1c0-14.3-11.6-25.9-25.9-25.9H118c-11 0-20 9-20 20v239.4c0 14.3 11.6 25.9 25.9 25.9H155c14.4-0.1 26-11.7 26-26.1zM668.6 181.2H845v176.4c0 14.3 11.6 25.9 25.9 25.9H902c14.3 0 25.9-11.6 25.9-25.9V118.2c0-11-9-20-20-20H668.6c-14.3 0-25.9 11.6-25.9 25.9v31.1c0 14.3 11.6 26 25.9 26zM357.4 845.2H181V668.8c0-14.3-11.6-25.9-25.9-25.9H124c-14.3 0-25.9 11.6-25.9 25.9v239.4c0 11 9 20 20 20h239.4c14.3 0 25.9-11.6 25.9-25.9v-31.1c-0.1-14.4-11.7-26-26-26zM845 668.8v176.4H668.6c-14.3 0-25.9 11.6-25.9 25.9v31.1c0 14.3 11.6 25.9 25.9 25.9H908c11 0 20-9 20-20V668.8c0-14.3-11.6-25.9-25.9-25.9H871c-14.4 0-26 11.6-26 25.9z" p-id="2794"></path></svg>
+            </div>
           </div>
           <div v-show="currentTab === 'pic'" class="pic-list">
             <div class="pic-item-wrapper" v-for="(item, index) in detailInfo.pics" :key="index">
-              <video v-if="item.livePhotoUrl" autoplay :id="'livePhoto' + index" class="pic-item video-item" :src="item.livePhotoUrl"></video>
-              <img v-else class="pic-item" :src="item.url" alt="图集" @click="openPreview(index)">
+              <video v-if="item.livePhotoUrl" autoplay :id="'livePhoto' + index" class="pic-item" :src="item.livePhotoUrl" @click="open('live', index)"></video>
+              <img v-else class="pic-item" :src="item.url" alt="图集" @click="open('pic', index)">
               <div class="live-photo-tip" v-if="item.livePhotoUrl" @click="playLivePhoto(index)">
                 Live
               </div>
               <!-- 保存、复制 -->
               <div v-if="item.livePhotoUrl" class="save-and-copy">
-                <div class="save-btn" @click="download(item.livePhotoUrl)">保存</div>
+                <div class="save-btn" :class="livePhotoLoading ? 'save-btn-disabled' : ''" @click="download(item.livePhotoUrl)">
+                  <span v-if="!livePhotoLoading">保存</span>
+                  <svg v-else t="1765683055654" class="icon loading" viewBox="0 0 1024 1024" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12849" width="15" height="15"><path d="M469.333333 128a42.666667 42.666667 0 0 1 42.666667-42.666667c235.648 0 426.666667 191.018667 426.666667 426.666667a42.666667 42.666667 0 1 1-85.333334 0 341.333333 341.333333 0 0 0-341.333333-341.333333 42.666667 42.666667 0 0 1-42.666667-42.666667z" p-id="12850"></path></svg>
+                </div>
                 <div class="copy-btn" @click="copyLink(item.livePhotoUrl)">复制</div>
               </div>
             </div>
           </div>
           <!-- 封面 -->
-          <img v-show="currentTab === 'cover'" class="cover" :src="detailInfo.cover" alt="封面" @click="openPreviewCover(detailInfo.cover)"></img>
+          <img v-show="currentTab === 'cover'" class="cover" :src="detailInfo.cover" alt="封面" @click="open('cover', 0)"></img>
         </div>
         <div class="right-tip" v-else>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play w-10 h-10 mb-2 opacity-20" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
@@ -383,68 +284,11 @@ const handlerLoadData = (e) => {
           <div class="tab-item" v-if="detailInfo.pics && detailInfo.pics.length !== 0" :class="{ active: currentTab === 'pic' }" @click="switchTab('pic')">图片预览</div>
           <div class="tab-item" v-if="detailInfo.cover" :class="{ active: currentTab === 'cover' }" @click="switchTab('cover')">封面预览</div>
         </div>
-        <!-- <div class="parse-tip">
-          注意：频繁解析可能导致平台限制，建议合理使用。
-        </div> -->
       </div>
     </div>
   </div>
   <!-- 图片预览模态框 -->
-  <div v-if="showPreview" class="modal" @click="closePreview">
-    <div class="modal-content" @click.stop @wheel="handleWheel">
-      <img :src="previewImage" alt="预览" class="preview-img" :style="{ transform: `translate(${imageX}px, ${imageY}px) scale(${scale}) rotate(${rotation}deg) scaleX(${mirror ? -1 : 1})`, transition: isDragging ? 'none' : 'transform .3s' }" @mousedown="startDrag" @mousemove="drag" @mouseup="stopDrag" @mouseleave="stopDrag">
-      <button class="close-btn" @click="closePreview">×</button>
-      <button v-if="showPrevNext" class="nav-btn prev-btn" @click="prevImage">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m15 18-6-6 6-6"/>
-        </svg>
-      </button>
-      <button v-if="showPrevNext" class="nav-btn next-btn" @click="nextImage">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m9 18 6-6-6-6"/>
-        </svg>
-      </button>
-      <div class="image-index" v-if="showPrevNext">
-        {{ currentImageIndex + 1 + ' / ' + detailInfo.pics.length }}
-      </div>
-      <!-- 工具条 -->
-      <div class="toolbar">
-        <button class="tool-btn" @click="rotateImage" title="旋转">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-            <path d="M21 3v5h-5"/>
-            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-            <path d="M8 16H3v5"/>
-          </svg>
-        </button>
-        <button class="tool-btn" @click="mirrorImage" title="镜像">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="20" height="14" x="2" y="3" rx="2"/>
-            <line x1="2" x2="22" y1="9" y2="9"/>
-          </svg>
-        </button>
-        <button class="tool-btn" @click="copyLink()" title="复制">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-          </svg>
-        </button>
-        <button class="tool-btn" :disabled="picLoading" @click="download()" title="下载">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7,10 12,15 17,10"/>
-            <line x1="12" x2="12" y1="15" y2="3"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-  <!-- Toast 提示 -->
-  <transition name="toast">
-    <div v-if="toast.show" class="toast" :class="toast.type">
-      {{ toast.message }}
-    </div>
-  </transition>
+  <ImagePreview :visible="visible" :list="previewList" :type="type" :current="current" @next="$event => { current = $event }" @prev="$event => { current = $event }" @close="visible = false" />
   <Dialog width="360px" title="设置" v-model:visible="showDialog" @confirm="showDialog = false" confirm-text="关闭">
     <Preference @load-data="handlerLoadData" />
   </Dialog>
@@ -536,10 +380,6 @@ const handlerLoadData = (e) => {
             border-radius: 50%;
           }
         }
-
-        // .title-text {
-        //   background-color: hotpink;
-        // }
       }
     }
     .right {
@@ -625,6 +465,24 @@ const handlerLoadData = (e) => {
       height: 100%;
       border-radius: 5px;
     }
+
+    .full {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      color: #000;
+      padding: 5px;
+      border-radius: 50%;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .full:hover {
+      background-color: #0F172A;
+      color: #fff;
+    }
   }
 
   .tab {
@@ -684,11 +542,6 @@ const handlerLoadData = (e) => {
         cursor: pointer;
       }
 
-      .video-item:hover {
-        opacity: 1;
-        cursor: auto;
-      }
-
       .save-and-copy {
         width: 100%;
         position: absolute;
@@ -709,6 +562,10 @@ const handlerLoadData = (e) => {
         .save-btn, .copy-btn {
           padding: 2px 5px;
           cursor: pointer;
+        }
+
+        .save-btn-disabled { 
+          cursor: not-allowed;
         }
       }
     }
@@ -741,139 +598,6 @@ const handlerLoadData = (e) => {
     opacity: 0.8;
   }
 
-  .loading {
-    // 旋转
-    animation: spin 0.5s linear infinite;
-  }
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
-  .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-
-  .modal-content {
-    position: relative;
-    // max-width: 90%;
-    // max-height: 90%;
-  }
-
-  .preview-img {
-    max-width: 80vw;
-    max-height: 80vh;
-    border-radius: 5px;
-    object-fit: contain;
-  }
-
-  .close-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 35px;
-    height: 35px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.3s;
-  }
-
-  .nav-btn {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 35px;
-    height: 35px;
-    // background-color: rgba(255, 255, 255, 0.8);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    line-height: 30px;
-    transition: background-color 0.3s;
-    z-index: 1001;
-  }
-
-  .nav-btn:hover, .close-btn:hover {
-    background-color: rgba(0, 0, 0, 1);
-  }
-
-  .prev-btn {
-    left: 20px;
-  }
-
-  .next-btn {
-    right: 20px;
-  }
-
-  .image-index {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #fff;
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 5px 10px;
-    border-radius: 5px;
-  }
-
-  .toolbar {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
-    z-index: 1001;
-  }
-
-  .tool-btn {
-    width: 35px;
-    height: 35px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.3s;
-  }
-
-  .tool-btn:hover {
-    background-color: rgba(0, 0, 0, 1);
-  }
-
-  .tool-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-
   .setting-btn {
     background-color: transparent;
     border: none;
@@ -893,15 +617,6 @@ const handlerLoadData = (e) => {
   .setting-btn:hover {
     background-color: #e5e7eb;
     color: #2151D1;
-  }
-
-  .parse-tip {
-    position: absolute;
-    top: 2px;
-    left: 20px;
-    white-space: nowrap;
-    color: #94a3b8;
-    font-size: 10px;
   }
 </style>
 

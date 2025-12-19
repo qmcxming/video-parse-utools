@@ -1,18 +1,8 @@
 <script setup>
 import { onMounted, ref } from 'vue';
+import showToast from '../../utils/toast';
 
 const emit = defineEmits(['loadData']);
-
-const toast = ref({ show: false, message: '', type: 'info' });
-
-const showToast = (message, type = 'info') => {
-  toast.value.show = true;
-  toast.value.message = message;
-  toast.value.type = type;
-  setTimeout(() => {
-    toast.value.show = false;
-  }, 3000);
-};
 
 const currentMenu = ref('setting');
 
@@ -204,11 +194,6 @@ onMounted(() => {
       </div>
     </div>
   </div>
-  <transition name="toast">
-    <div v-if="toast.show" class="toast" :class="toast.type">
-      {{ toast.message }}
-    </div>
-  </transition>
 </template>
 <style lang="scss" scoped>
 .preference-content {
