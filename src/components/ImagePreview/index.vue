@@ -213,13 +213,6 @@ const playLivePhoto = async () => {
         </button>
       </div>
     </div>
-    <!-- live preview -->
-    <!-- <div class="live-preview" v-if="type === 'live'">
-      <video id="livePhoto" :src="list[current]" alt="预览" class="preview-img" />
-      <div class="live-control" @click.stop="playLivePhoto">
-        Live
-      </div>
-    </div> -->
   </div>
 </template>
 <style lang="scss" scoped>

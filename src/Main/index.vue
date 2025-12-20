@@ -297,13 +297,11 @@ const handlerLoadData = (e) => {
   $radius: 10px;
   $card-height: calc(100vh - 40px - 40px);
   .main {
-    // width: 100%;
     height: calc(100vh - 40px);
     background-color: #F5F7FA;// #F9FAFB
     padding: 20px;
   }
   .main-card {
-    // margin-top: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -342,8 +340,6 @@ const handlerLoadData = (e) => {
         margin: 5px 0;
 
         .platform-item {
-          // width: 50px;
-          // height: 50px;
           padding: 5px 10px;
           background-color: #fff;
           border-radius: 5px;
@@ -492,7 +488,6 @@ const handlerLoadData = (e) => {
     align-items: center;
     margin-top: 10px;
     background-color: #fff;
-    // padding: 5px;
     position: absolute;
     border-radius: 5px;
     top: 30px;
@@ -555,7 +550,6 @@ const handlerLoadData = (e) => {
         gap: 5px;
         // 从上到下渐变
         background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%);
-        // background-color: rgba(0, 0, 0, 0.5);
         color: #fff;
         font-size: 12px;
 
