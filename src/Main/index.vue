@@ -29,6 +29,9 @@ const current = ref(0);
 const previewList = ref([]);
 const visible = ref(false);
 
+const imageLoading = ref({});
+const coverLoading = ref(false);
+
 const open = (mode, index) => {
   if (mode === 'pic') {
     previewList.value = detailInfo.value.pics.map(item => item.url);
@@ -88,6 +91,15 @@ const parseInfo = async () => {
     detailInfo.value = info;
     currentTab.value = info.downloadUrl ? 'video' : 'pic';
     loading.value = false;
+    if (info.pics) {
+      imageLoading.value = {};
+      info.pics.forEach((_, index) => {
+        imageLoading.value[index] = true;
+      });
+    }
+    if (info.cover) {
+      coverLoading.value = true;
+    }
     setHistory(content.value, info);
   } catch (e) {
     console.log(e.message);
@@ -257,8 +269,12 @@ const handlerLoadData = (e) => {
           </div>
           <div v-show="currentTab === 'pic'" class="pic-list">
             <div class="pic-item-wrapper" v-for="(item, index) in detailInfo.pics" :key="index">
+              <div v-if="imageLoading[index]" class="loading-overlay">
+                <svg t="1765683055654" class="icon loading" viewBox="0 0 1024 1024" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12849" width="20" height="20"><path d="M469.333333 128a42.666667 42.666667 0 0 1 42.666667-42.666667c235.648 0 426.666667 191.018667 426.666667 426.666667a42.666667 42.666667 0 1 1-85.333334 0 341.333333 341.333333 0 0 0-341.333333-341.333333 42.666667 42.666667 0 0 1-42.666667-42.666667z" p-id="12850"></path></svg>
+                加载中...
+              </div>
               <video v-if="item.livePhotoUrl" autoplay :id="'livePhoto' + index" class="pic-item" :src="item.livePhotoUrl" @click="open('live', index)"></video>
-              <img v-else class="pic-item" :src="item.url" alt="图集" @click="open('pic', index)">
+              <img v-else class="pic-item" :src="item.url" alt="图集" @click="open('pic', index)" @load="imageLoading[index] = false" @error="imageLoading[index] = false">
               <div class="live-photo-tip" v-if="item.livePhotoUrl" @click="playLivePhoto(index)">
                 Live
               </div>
@@ -273,7 +289,13 @@ const handlerLoadData = (e) => {
             </div>
           </div>
           <!-- 封面 -->
-          <img v-show="currentTab === 'cover'" class="cover" :src="detailInfo.cover" alt="封面" @click="open('cover', 0)"></img>
+          <div v-show="currentTab === 'cover'" class="cover-wrapper">
+            <div v-if="coverLoading" class="loading-overlay">
+              <svg t="1765683055654" class="icon loading" viewBox="0 0 1024 1024" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12849" width="20" height="20"><path d="M469.333333 128a42.666667 42.666667 0 0 1 42.666667-42.666667c235.648 0 426.666667 191.018667 426.666667 426.666667a42.666667 42.666667 0 1 1-85.333334 0 341.333333 341.333333 0 0 0-341.333333-341.333333 42.666667 42.666667 0 0 1-42.666667-42.666667z" p-id="12850"></path></svg>
+              加载中...
+            </div>
+            <img class="cover" :src="detailInfo.cover" alt="封面" @click="open('cover', 0)" @load="coverLoading = false" @error="coverLoading = false">
+          </div>
         </div>
         <div class="right-tip" v-else>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play w-10 h-10 mb-2 opacity-20" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
@@ -522,6 +544,24 @@ const handlerLoadData = (e) => {
     .pic-item-wrapper {
       position: relative;
 
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 5px;
+        color: #666;
+        font-size: 12px;
+        gap: 5px;
+        z-index: 1;
+      }
+
       .live-photo-tip {
         position: absolute;
         top: 2px;
@@ -578,12 +618,34 @@ const handlerLoadData = (e) => {
     }
   }
 
+  .cover-wrapper {
+    position: relative;
+    margin-top: 80px;
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+      color: #666;
+      font-size: 14px;
+      gap: 5px;
+      z-index: 1;
+    }
+  }
+
   .cover {
     width: 100%;
     height: 200px;
     object-fit: cover;
     border-radius: 5px;
-    margin-top: 80px;
     transition: all .3s;
     cursor: pointer;
   }
