@@ -1,5 +1,5 @@
 const https = require('https');
-const { getRedirectUrl, Video, getRandomUserAgent, convertUrl } = require('./base');
+const { getRedirectUrl, Video, getRandomUserAgent, convertUrl, makeRequest, VideoAuthor } = require('./base');
 
 /**
  * 小红书解析器
@@ -86,11 +86,11 @@ class RedBookParser {
 
     // 7、作者信息
     const user = data.user;
-    const author = {
-      id: user.userId,
-      name: user.nickname,
-      avatar: user.avatar
-    };
+    const author = new VideoAuthor(
+      user.userId,
+      user.nickname,
+      user.avatar
+    );
 
     // 8、封面
     let cover = '';
@@ -115,32 +115,15 @@ class RedBookParser {
    * @returns {Promise<string>} HTML内容
    */
   async getPageHtml(url) {
-    return new Promise((resolve, reject) => {
-      const parsedUrl = new URL(url);
-      const options = {
-        hostname: parsedUrl.hostname,
-        path: parsedUrl.pathname + parsedUrl.search,
-        method: 'GET',
-        headers: {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { data } = await makeRequest(url, 'GET', {
           'User-Agent': getRandomUserAgent()
-        }
-      };
-
-      const req = https.request(options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
         });
-        res.on('end', () => {
-          resolve(data);
-        });
-      });
-
-      req.on('error', (error) => {
-        reject(error);
-      });
-
-      req.end();
+        resolve(data);
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 }

@@ -1,5 +1,4 @@
-const https = require('https');
-const { convertUrl, Video } = require('./base');
+const { convertUrl, Video, makeRequest, VideoAuthor } = require('./base');
 
 /**
  * 最右解析器
@@ -44,11 +43,11 @@ class ZuiYouParser {
     const data = jsonNode.data.post;
     const videoKey = data.imgs[0].id;
     const member = data.member;
-    const author = {
-      id: member.id,
-      name: member.name,
-      avatar: convertUrl(member.avatar_urls.origin.urls[0])
-    };
+    const author = new VideoAuthor(
+      member.id,
+      member.name,
+      convertUrl(member.avatar_urls.origin.urls[0])
+    );
 
     // 图集或视频
     let downloadUrl = '';
@@ -75,35 +74,17 @@ class ZuiYouParser {
    * @returns {Promise<string>} 响应体
    */
   async postRequest(url, data) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const postData = JSON.stringify(data);
-      const parsedUrl = new URL(url);
-      const options = {
-        hostname: parsedUrl.hostname,
-        path: parsedUrl.pathname,
-        method: 'POST',
-        headers: {
+      try {
+        const { data } = await makeRequest(url, 'POST', {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(postData)
-        }
-      };
-
-      const req = https.request(options, (res) => {
-        let body = '';
-        res.on('data', (chunk) => {
-          body += chunk;
-        });
-        res.on('end', () => {
-          resolve(body);
-        });
-      });
-
-      req.on('error', (error) => {
-        reject(error);
-      });
-
-      req.write(postData);
-      req.end();
+        }, postData);
+        resolve(data);
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 }

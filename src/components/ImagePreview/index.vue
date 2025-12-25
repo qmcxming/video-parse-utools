@@ -145,7 +145,42 @@ const download = async () => {
 
 const copyLink = (url) => {
   navigator.clipboard.writeText(url);
-  showToast('已复制到剪贴板');
+  showToast('链接已复制到剪贴板');
+}
+
+const imageCopyLoading = ref(false);
+
+const copyImage = async (url) => {
+  try {
+    imageCopyLoading.value = true;
+    const response = await fetch(url);
+    const blob = await response.blob();
+    
+    // 使用canvas转换为PNG以确保兼容性
+    const img = new Image();
+    img.src = URL.createObjectURL(blob);
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    
+    const pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    URL.revokeObjectURL(img.src);
+    
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
+    showToast('图片已复制到剪贴板');
+    imageCopyLoading.value = false;
+  } catch (e) {
+    console.log(e);
+    imageCopyLoading.value = false;
+    showToast('复制失败', 'error');
+  }
 }
 
 const playLivePhoto = async () => { 
@@ -197,11 +232,30 @@ const playLivePhoto = async () => {
             <line x1="2" x2="22" y1="9" y2="9"/>
           </svg>
         </button>
-        <button class="tool-btn" @click="copyLink(list[current])" title="复制">
+        <button class="tool-btn copy-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
           </svg>
+          <div class="copy-menu">
+            <button v-if="type !== 'video'" class="tool-btn copy-item" @click.stop="copyImage(list[current])" title="复制图片">
+              <!-- 图片 svg -->
+              <svg v-if="!imageCopyLoading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
+                <path d="M16.5 16.5L18.5 18.5"/>
+              </svg>
+              <svg v-else t="1765683055654" class="icon loading" viewBox="0 0 1024 1024" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12849" width="15" height="15"><path d="M469.333333 128a42.666667 42.666667 0 0 1 42.666667-42.666667c235.648 0 426.666667 191.018667 426.666667 426.666667a42.666667 42.666667 0 1 1-85.333334 0 341.333333 341.333333 0 0 0-341.333333-341.333333 42.666667 42.666667 0 0 1-42.666667-42.666667z" p-id="12850"></path></svg>
+            </button>
+            <button class="tool-btn copy-item" @click.stop="copyLink(list[current])" title="复制链接">
+              <!-- 链接 svg -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </button>
+          </div>
         </button>
         <button class="tool-btn" :disabled="loading" @click="download()" title="下载">
           <svg v-if="!loading" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -339,6 +393,30 @@ const playLivePhoto = async () => {
 .tool-btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.copy-btn {
+  position: relative;
+}
+
+.copy-btn:hover .copy-menu,
+.copy-menu:hover {
+  display: flex;
+}
+
+.copy-menu {
+  position: absolute;
+  bottom: 0;
+  right: 50%;
+  transform: translateX(50%);
+  border-radius: 50%;
+  flex-direction: column;
+  display: none;
+  transition: display 0.3s;
+
+  .copy-item:last-child {
+    margin-top: 5px;
+  }
 }
 
 .live-control {

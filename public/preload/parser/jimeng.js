@@ -1,5 +1,4 @@
-const https = require('https');
-const { getRedirectUrl, Video, getRandomUserAgent, convertUrl } = require('./base');
+const { getRedirectUrl, Video, getRandomUserAgent, convertUrl, makeRequest, VideoAuthor } = require('./base');
 
 /**
  * 即梦解析器
@@ -60,11 +59,11 @@ class JiMengParser {
 
     // 7、用户信息
     const authorInfo = allInfo.author;
-    const author = {
-      id: authorInfo.secUid,
-      name: authorInfo.name,
-      avatar: convertUrl(authorInfo.avatarUrl)
-    };
+    const author = new VideoAuthor(
+      authorInfo.secUid,
+      authorInfo.name,
+      convertUrl(authorInfo.avatarUrl)
+    );
 
     // 8、图片或视频信息
     const pics = [];
@@ -89,34 +88,11 @@ class JiMengParser {
    * @returns {Promise<string>} HTML内容
    */
   async getPageHtml(url) {
-    return new Promise((resolve, reject) => {
-      const parsedUrl = new URL(url);
-      const options = {
-        hostname: parsedUrl.hostname,
-        path: parsedUrl.pathname + parsedUrl.search,
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0',
-          'Referer': 'https://jimeng.jianying.com/'
-        }
-      };
-
-      const req = https.request(options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        res.on('end', () => {
-          resolve(data);
-        });
-      });
-
-      req.on('error', (error) => {
-        reject(error);
-      });
-
-      req.end();
+    const { data } = await makeRequest(url, 'GET', {
+      'User-Agent': 'Mozilla/5.0',
+      'Referer': 'https://jimeng.jianying.com/'
     });
+    return data;
   }
 }
 

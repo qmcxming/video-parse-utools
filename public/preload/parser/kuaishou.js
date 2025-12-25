@@ -1,6 +1,5 @@
 const https = require('https');
-const urlModule = require('url');
-const { getRedirectUrl, Video } = require('./base');
+const { getRedirectUrl, Video, VideoAuthor } = require('./base');
 
 /**
  * 快手解析器
@@ -29,10 +28,18 @@ class KuaishouParser {
     headers.Cookie = cookies.join('; ');
 
     const response = await this.makeRequest(url, { headers });
-    const html = response.body;    
+    let html = response.body;
+    // 匹配a标签中的href属性的值、
+    const shareUrlMatcher = html.match(/<a href="([^"]+)">/);
+    // 处理莫名返回a标签
+    if (shareUrlMatcher) {
+      url = shareUrlMatcher[1];
+      const resp = await this.makeRequest(url, { headers });
+      html = resp.body;
+    }
 
     const matcher = html.match(/window\.INIT_STATE\s*=\s*(.*?)<\/script>/s);
-    if (!matcher) throw new Error('No HTML message');
+    if (!matcher) throw new Error('从HTML中解析视频信息失败');
 
     const jsonStr = matcher[1].trim();
 
@@ -62,11 +69,11 @@ class KuaishouParser {
       downloadUrl = data.mainMvUrls[0].url;
     }
 
-    const author = {
-      id: data.userId,
-      name: data.userName,
-      avatar: data.headUrl
-    };
+    const author = new VideoAuthor(
+      data.userId,
+      data.userName,
+      data.headUrl
+    );
 
     // 图集
     const extParamsAtlas = data.ext_params?.atlas;
@@ -93,19 +100,9 @@ class KuaishouParser {
     );
   }
 
-  makeRequest(url, options = {}, redirectCount = 0) {
+  makeRequest(url, options = {}) {
     return new Promise((resolve, reject) => {
-      if (redirectCount > 5) {
-        reject(new Error('Too many redirects'));
-        return;
-      }
       const req = https.request(url, options, (res) => {
-        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          const redirectUrl = urlModule.resolve(url, res.headers.location);
-          console.log(`Redirecting to: ${redirectUrl}`);
-          this.makeRequest(redirectUrl, options, redirectCount + 1).then(resolve).catch(reject);
-          return;
-        }
         let data = '';
         res.on('data', (chunk) => data += chunk);
         res.on('end', () => {

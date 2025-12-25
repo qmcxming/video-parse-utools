@@ -1,7 +1,4 @@
-
-const https = require('https');
-const urlModule = require('url');
-const { getRedirectUrl, Video } = require('./base');
+const { getRedirectUrl, Video, makeRequest, VideoAuthor } = require('./base');
 
 /**
  * 抖音解析器
@@ -67,34 +64,9 @@ class DouYinParser {
    * @returns {Promise<string>} HTML内容
    */
   async getVideoPage(videoId) {
-    return new Promise((resolve, reject) => {
-      const videoPageUrl = `https://www.iesdouyin.com/share/video/${videoId}`;
-      const url = new URL(videoPageUrl);
-      const options = {
-        hostname: url.hostname,
-        path: url.pathname + url.search,
-        method: 'GET',
-        headers: {
-          'User-Agent': DouYinParser.USER_AGENT
-        }
-      };
-
-      const req = https.request(options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        res.on('end', () => {
-          resolve(data);
-        });
-      });
-
-      req.on('error', (error) => {
-        reject(error);
-      });
-
-      req.end();
-    });
+    const videoPageUrl = `https://www.iesdouyin.com/share/video/${videoId}`;
+    const { data } = await makeRequest(videoPageUrl, 'GET', { 'User-Agent': DouYinParser.USER_AGENT });
+    return data;
   }
 
   /**
@@ -140,11 +112,11 @@ class DouYinParser {
     }
 
     const authorNode = data.author;
-    const author = {
-      id: authorNode.sec_uid,
-      name: authorNode.nickname,
-      avatar: authorNode.avatar_thumb.url_list[0]
-    };
+    const author = new VideoAuthor(
+      authorNode.sec_uid,
+      authorNode.nickname,
+      authorNode.avatar_thumb.url_list[0]
+    );
 
     console.log("解析成功");
     return new Video(videoId, title, downloadUrl, cover, pics, author);

@@ -1,5 +1,4 @@
-const https = require('https');
-const { getRedirectUrl, convertUrl, Video } = require('./base');
+const { getRedirectUrl, convertUrl, Video, makeRequest, VideoAuthor } = require('./base');
 
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
     "(KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36";
@@ -45,11 +44,11 @@ class BiliBiliParser {
     const title = data.title;
     const cover = convertUrl(data.pic);
     const owner = data.owner;
-    const author = {
-      id: owner.mid,
-      name: owner.name,
-      avatar: convertUrl(owner.face)
-    };
+    const author = new VideoAuthor(
+      owner.mid,
+      owner.name,
+      convertUrl(owner.face)
+    );
     return new Video(videoId, title, downloadUrl, cover, [], author)
   }
 
@@ -79,39 +78,8 @@ class BiliBiliParser {
   }
 
   async sendBiliBiliRequest(url) {
-    return new Promise((resolve, reject) => {
-      const parsedUrl = new URL(url);
-      const options = {
-        hostname: parsedUrl.hostname,
-        path: parsedUrl.pathname + parsedUrl.search,
-        method: 'GET',
-        headers: {
-          'User-Agent': USER_AGENT,
-          'Referer': 'https://www.bilibili.com/'
-        }
-      };
-
-      const req = https.request(options, (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        res.on('end', () => {
-          try {
-            const json = JSON.parse(data);
-            resolve(json);
-          } catch (e) {
-            reject(e);
-          }
-        });
-      });
-
-      req.on('error', (error) => {
-        reject(error);
-      });
-
-      req.end();
-    });
+    const { data } = await makeRequest(url, 'GET', { 'User-Agent': USER_AGENT });
+    return JSON.parse(data);
   }
 }
 
