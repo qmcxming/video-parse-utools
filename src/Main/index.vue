@@ -13,6 +13,7 @@ defineProps({
 })
 
 const currentTab = ref('video') // 默认显示视频
+const imageTab = ref('pic'); // pic live
 
 const content = ref('');
 
@@ -22,6 +23,16 @@ const loading = ref(false);
 const previewImage = ref('');
 const switchTab = (tab) => {
   currentTab.value = tab
+}
+
+const switchImageTab = (tab) => {
+  if (tab === 'live' && detailInfo.value.pics[0].livePhotoUrl === '') {
+    return;
+  } 
+  if (tab === 'pic' && detailInfo.value.pics[0].url === '') {
+    return;
+  }
+  imageTab.value = tab;
 }
 
 const type = ref('pic');
@@ -98,6 +109,7 @@ const parseInfo = async () => {
     loading.value = false;
     if (info.pics) {
       imageLoading.value = {};
+      imageTab.value = info.pics[0]?.livePhotoUrl ? 'live' : 'pic';
       info.pics.forEach((_, index) => {
         imageLoading.value[index] = true;
       });
@@ -278,13 +290,13 @@ const handlerLoadData = (e) => {
                 <svg t="1765683055654" class="icon loading" viewBox="0 0 1024 1024" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12849" width="20" height="20"><path d="M469.333333 128a42.666667 42.666667 0 0 1 42.666667-42.666667c235.648 0 426.666667 191.018667 426.666667 426.666667a42.666667 42.666667 0 1 1-85.333334 0 341.333333 341.333333 0 0 0-341.333333-341.333333 42.666667 42.666667 0 0 1-42.666667-42.666667z" p-id="12850"></path></svg>
                 加载中...
               </div>
-              <video v-if="item.livePhotoUrl" autoplay :id="'livePhoto' + index" class="pic-item" :src="item.livePhotoUrl" @click="open('live', index)" @loadeddata="imageLoading[index] = false" @error="imageLoading[index] = false"></video>
-              <img v-else class="pic-item" :src="item.url" alt="图集" @click="open('pic', index)" @load="imageLoading[index] = false" @error="imageLoading[index] = false">
-              <div class="live-photo-tip" v-if="item.livePhotoUrl" @click="playLivePhoto(index)">
+              <video v-show="item.livePhotoUrl && imageTab === 'live'" autoplay :id="'livePhoto' + index" class="pic-item" :src="item.livePhotoUrl" @click="open('live', index)" @loadeddata="imageLoading[index] = false" @error="imageLoading[index] = false"></video>
+              <img v-show="item.url && imageTab === 'pic'" class="pic-item" :src="item.url" alt="图集" @click="open('pic', index)" @load="imageLoading[index] = false" @error="imageLoading[index] = false">
+              <div class="live-photo-tip" v-if="item.livePhotoUrl && imageTab === 'live'" @click="playLivePhoto(index)">
                 Live
               </div>
               <!-- 保存、复制 -->
-              <div v-if="item.livePhotoUrl" class="save-and-copy">
+              <div v-if="item.livePhotoUrl && imageTab === 'live'" class="save-and-copy">
                 <div class="save-btn" :class="livePhotoLoading ? 'save-btn-disabled' : ''" @click="download(item.livePhotoUrl)">
                   <span v-if="!livePhotoLoading">保存</span>
                   <svg v-else t="1765683055654" class="icon loading" viewBox="0 0 1024 1024" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12849" width="15" height="15"><path d="M469.333333 128a42.666667 42.666667 0 0 1 42.666667-42.666667c235.648 0 426.666667 191.018667 426.666667 426.666667a42.666667 42.666667 0 1 1-85.333334 0 341.333333 341.333333 0 0 0-341.333333-341.333333 42.666667 42.666667 0 0 1-42.666667-42.666667z" p-id="12850"></path></svg>
@@ -300,6 +312,10 @@ const handlerLoadData = (e) => {
               加载中...
             </div>
             <img class="cover" :src="detailInfo.cover" alt="封面" @click="open('cover', 0)" @load="coverLoading = false" @error="coverLoading = false">
+          </div>
+          <div class="live-photo" v-if="currentTab === 'pic'">
+            <div v-show="imageTab === 'live'" class="live-photo-item" @click="switchImageTab('pic')">Live</div>
+            <div v-show="imageTab === 'pic'" class="live-photo-item" @click="switchImageTab('live')">Photo</div>
           </div>
         </div>
         <div class="right-tip" v-else>
@@ -428,6 +444,22 @@ const handlerLoadData = (e) => {
         color: rgba(0, 0, 0, 0.5);
         gap: 10px;
       }
+
+      .live-photo {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        display: flex;
+        font-size: 12px;
+
+        .live-photo-item {
+          padding: 2px 5px;
+          background-color: rgba(0, 0, 0, 1);
+          color: #fff;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
     }
   }
   #input {
@@ -517,7 +549,7 @@ const handlerLoadData = (e) => {
     background-color: #fff;
     position: absolute;
     border-radius: 5px;
-    top: 30px;
+    top: 25px;
     left: 25%;
 
     .tab-item {
