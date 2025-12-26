@@ -185,18 +185,18 @@ const handleConfirm = () => {
   width: 100%;
   padding-top: 10px;
   padding-bottom: 10px;
-  background-color: #0f172a;
+  background-color: var(--primary-color);
   color: white;
   border-radius: 5px;
   font-size: 14px;
   font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
+  transition: opacity 0.2s, transform 0.1s;
   border: none;
   cursor: pointer;
 }
 
 .btn-confirm:hover {
-  background-color: #1e293b;
+  opacity: 0.9;
 }
 
 .btn-confirm:active {

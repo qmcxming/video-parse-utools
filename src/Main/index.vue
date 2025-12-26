@@ -512,15 +512,15 @@ const handlerLoadData = (e) => {
     display: none;
   }
   #input:focus {
-    border: 1px solid #1E293B;
+    border: 1px solid var(--primary-color);
     background-color: #fff;
     // 黑色阴影
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 1);
+    box-shadow: 0 0 0 1px var(--primary-color);
   }
   .parse-btn {
     width: 100%;
     height: 40px;
-    background-color: #0F172A;
+    background-color: var(--primary-color);
     color: #fff;
     border-radius: 5px;
     font-size: 15px;
@@ -531,14 +531,16 @@ const handlerLoadData = (e) => {
     align-items: center;
     justify-content: center;
     gap: 5px;
+    transition: opacity 0.3s;
+    border: none;
   }
 
   .parse-btn:hover {
-    background-color: #1E293B;
+    opacity: 0.9;
   }
 
   .parse-btn:disabled { 
-    background-color: #1E293B;
+    opacity: 0.7;
     cursor: not-allowed;
     color: rgba(255, 255, 255, 0.5);
   }
@@ -600,7 +602,7 @@ const handlerLoadData = (e) => {
       margin: 5px;
     }
     .active {
-      background-color: #0F172A;
+      background-color: var(--primary-color);
       color: #fff;
     }
   }
@@ -744,7 +746,7 @@ const handlerLoadData = (e) => {
 
   .setting-btn:hover {
     background-color: #e5e7eb;
-    color: #2151D1;
+    color: var(--primary-color);
   }
 </style>
 

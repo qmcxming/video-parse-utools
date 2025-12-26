@@ -1,6 +1,8 @@
 :root {
   --blue: rgb(88, 164, 246);
   --light: #fff;
+  /* 深空黑夜#0F172A 超级猛男#FF69B4 紫颜悦色#743EE4 青翠森林#43946C */
+  --primary-color: #0F172A;
 }
 
 html,

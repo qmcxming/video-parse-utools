@@ -11,6 +11,8 @@ const defaultPath = window.utools.getPath('downloads');
 
 const downloadPath = ref('');
 
+const currentTheme = ref('#0f172a');
+
 const onChange = () => {
   console.log(downloadPath.value);
   window.utools.dbStorage.setItem('downloadPath', downloadPath.value);
@@ -29,7 +31,33 @@ const selectFolder = () => {
   }
 };
 
+const changeTheme = (color) => {
+  if (validateColor(color) === false) {
+    showToast('颜色格式不正确，请选择有效的颜色值');
+    return;
+  }
+  currentTheme.value = color;
+  document.documentElement.style.setProperty('--primary-color', color);
+  window.utools.dbStorage.setItem('theme', color);
+  showToast('主题已切换');
+};
+
+// 校验颜色
+const validateColor = (color) => {
+  const reg = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+  return reg.test(color);
+};
+
 const history = ref([]);
+
+const themeList = [
+  { name: '深空黑夜', color: '#0f172a' },
+  { name: '超级猛男', color: '#ff69b4' },
+  { name: '紫颜悦色', color: '#743ee4' },
+  { name: '青翠森林', color: '#43946c' },
+  { name: '科技深蓝', color: '#2455EB' },
+  { name: '橘橙之火', color: '#ff7e5f' }
+]
 
 const deleteHistory = (index) => {
   console.log(history.value);
@@ -55,6 +83,8 @@ onMounted(() => {
   downloadPath.value =
     window.utools.dbStorage.getItem('downloadPath') || defaultPath;
   history.value = window.utools.dbStorage.getItem('history') || [];
+  currentTheme.value = window.utools.dbStorage.getItem('theme') || '#0f172a';
+  document.documentElement.style.setProperty('--primary-color', currentTheme.value);
 });
 </script>
 <template>
@@ -85,7 +115,7 @@ onMounted(() => {
     <div class="menu-content">
       <!-- 设置 -->
       <div v-if="currentMenu === 'setting'" class="setting">
-        <div class="setting-item">
+        <div class="setting-item download-path">
           <label for="downloadPath">下载路径</label>
           <input
             type="text"
@@ -110,6 +140,13 @@ onMounted(() => {
                 d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"
               />
             </svg>
+          </div>
+        </div>
+        <div class="setting-item">
+          <label for="theme">主题配色</label>
+          <div class="theme-dots">
+            <div class="dot" v-for="(item, index) in themeList" :key="index" :class="{ active: currentTheme === item.color }" :style="{ background: item.color }" :title="item.name" @click="changeTheme(item.color)"></div>
+            <input class="color-picker dot" type="color" :value="currentTheme" @change="changeTheme($event.target.value)" title="自定义颜色" />
           </div>
         </div>
       </div>
@@ -230,7 +267,7 @@ onMounted(() => {
 }
 
 .menu-item.active {
-  background-color: #0f172a;
+  background-color: var(--primary-color);
   color: white;
 }
 
@@ -252,9 +289,64 @@ onMounted(() => {
     bottom: 8px;
     cursor: pointer;
   }
+
+  // 主题圆点
+  .theme-dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+  }
+  .dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+  }
+  .dot:hover {
+    transform: scale(1.2);
+  }
+  .dot.active {
+    border-color: var(--primary-color);
+  }
+
+  // 定制颜色选择器
+  .color-picker {
+    width: 25px;
+    height: 25px;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    &::-webkit-color-swatch-wrapper {
+      padding: 0;
+      margin: 0;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    &::-webkit-color-swatch {
+      border: none;
+      border-radius: 50%;
+      padding: 0;
+      margin: 0;
+    }
+
+    &::-moz-color-swatch {
+      border: none;
+      border-radius: 50%;
+    }
+  }
 }
 
-.setting-item label {
+.setting-item.download-path label {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
@@ -262,7 +354,7 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.setting-item input {
+.setting-item.download-path input {
   width: 100%;
   padding: 10px;
   border: 1px solid #ced4da;
@@ -273,12 +365,11 @@ onMounted(() => {
   padding-right: 30px;
 }
 
-.setting-item input:focus {
-  border-color: #1e293b;
+.setting-item.download-path input:focus {
   outline: none;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--primary-color);
   // 黑色阴影
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 1);
+  box-shadow: 0 0 0 1px var(--primary-color);
 }
 
 .about {
@@ -295,7 +386,7 @@ onMounted(() => {
 }
 
 .active {
-  background-color: #0f172a;
+  background-color: var(--primary-color);
   color: #fff;
 }
 
@@ -369,6 +460,11 @@ onMounted(() => {
   cursor: pointer;
   border-radius: 3px;
   font-size: 10px;
+  transition: transform 0.1s;
+
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 .history {
@@ -407,16 +503,16 @@ onMounted(() => {
       justify-content: space-between;
       align-items: center;
       .btn {
-        background-color: #0f172a;
+        background-color: var(--primary-color);
         color: #fff;
         padding: 6px 12px;
         border-radius: 3px;
         cursor: pointer;
         font-size: 10px;
-        transition: background-color 0.3s, transform 0.1s;
+        transition: opacity 0.3s, transform 0.1s;
 
         &:hover {
-          background-color: #1e293b;
+          opacity: 0.9;
         }
 
         &:active {
@@ -480,7 +576,7 @@ onMounted(() => {
     transition: display 0.3s;
 
     .confirm-btn {
-      background-color: #0f172a;
+      background-color: var(--primary-color);
       color: #fff;
     }
 
@@ -489,7 +585,7 @@ onMounted(() => {
       padding: 5px 10px;
       border-radius: 3px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: opacity 0.3s;
       font-size: 12px;
       &:hover {
         background-color: #e9ecef;
@@ -497,8 +593,7 @@ onMounted(() => {
     }
 
     .confirm-btn:hover {
-      background-color: #1e293b;
-      color: #fff;
+      opacity: 0.9;
     }
   }
 }
