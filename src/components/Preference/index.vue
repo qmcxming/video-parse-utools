@@ -587,9 +587,10 @@ onMounted(() => {
       cursor: pointer;
       transition: opacity 0.3s;
       font-size: 12px;
-      &:hover {
-        background-color: #e9ecef;
-      }
+    }
+
+    .cancel-btn:hover {
+      background-color: #e9ecef;
     }
 
     .confirm-btn:hover {
