@@ -75,6 +75,11 @@ const clearHistory = () => {
   showToast('已清空解析记录');
 };
 
+const copyContent = (content) => {
+  window.utools.copyText(content);
+  showToast('已复制到剪贴板');
+};
+
 const showConfirmPopover = ref(false);
 
 const version = ref(packageJson.version);
@@ -185,9 +190,13 @@ onMounted(() => {
         <!-- 清空 -->
         <div class="no-data" v-if="history.length === 0">暂无解析记录</div>
         <div class="history-item" v-for="(item, index) in history" :key="index">
+          <div class="history-index">{{ index + 1 }}</div>
           <div class="item-top">
-            <div class="item-title" :title="item.content">
+            <div class="item-title" title="点击复制" @click="copyContent(item.content)">
               {{ item.content }}
+            </div>
+            <div class="content-tooltip">
+              <div class="content-tooltip-content">{{ item.content }}</div>
             </div>
             <div class="btn" @click="emit('loadData', item)">查看</div>
           </div>
@@ -323,6 +332,8 @@ onMounted(() => {
     border: none;
     background: none;
     cursor: pointer;
+    opacity: 0.8;
+    backdrop-filter: invert(0.1);
 
     &::-webkit-color-swatch-wrapper {
       padding: 0;
@@ -407,7 +418,6 @@ onMounted(() => {
   }
 
   .popover-content {
-    // display: none;
     position: absolute;
     bottom: 20px;
     left: 50%;
@@ -416,7 +426,6 @@ onMounted(() => {
     border-radius: 4px;
     z-index: 1;
     transition: opacity 0.3s;
-    // opacity: 0;
   }
 
   &:hover .popover-content {
@@ -487,6 +496,17 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
+
+    .history-index {
+      font-size: 10px;
+      margin-bottom: 5px;
+      color: #6c757d;
+      font-weight: 500;
+      position: absolute;
+      top: 2px;
+      left: 5px;
+    }
 
     .item-title {
       width: 100px;
@@ -496,12 +516,35 @@ onMounted(() => {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .content-tooltip {
+      display: block;
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      background-color: #fff;
+      border-radius: 4px;
+      z-index: 1;
+      transition: transform 0.3s, padding 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e9ecef;
+      word-wrap: break-word;
+      transform: scale(0);
+      max-width: 180px;
     }
 
     .item-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: relative;
+      &:hover .content-tooltip {
+        padding: 10px;
+        transform: scale(1);
+      }
+
       .btn {
         background-color: var(--primary-color);
         color: #fff;

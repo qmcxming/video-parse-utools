@@ -240,6 +240,11 @@ const handlerLoadData = (e) => {
   showDialog.value = false;
   setImageLoading(data);
 }
+
+// 判断数组对象内的某个属性值是否不为空
+const isNotEmpty = (arr, key) => {
+  return arr.some(item => item[key] !== '');
+}
 </script>
 <template>
   <div class="main">
@@ -318,6 +323,10 @@ const handlerLoadData = (e) => {
                 <div class="copy-btn" @click="copyLink(item.livePhotoUrl)">复制</div>
               </div>
             </div>
+            <div class="live-photo">
+              <div v-show="imageTab === 'live' && isNotEmpty(detailInfo.pics, 'url')" class="live-photo-item" @click="switchImageTab('pic')">Live</div>
+              <div v-show="imageTab === 'pic' && isNotEmpty(detailInfo.pics, 'livePhotoUrl')" class="live-photo-item" @click="switchImageTab('live')">Photo</div>
+            </div>
           </div>
           <!-- 封面 -->
           <div v-show="currentTab === 'cover'" class="cover-wrapper">
@@ -326,10 +335,6 @@ const handlerLoadData = (e) => {
               加载中...
             </div>
             <img class="cover" :src="detailInfo.cover" alt="封面" @click="open('cover', 0)" @load="coverLoading = false" @error="coverLoading = false">
-          </div>
-          <div class="live-photo" v-if="currentTab === 'pic'">
-            <div v-show="imageTab === 'live'" class="live-photo-item" @click="switchImageTab('pic')">Live</div>
-            <div v-show="imageTab === 'pic'" class="live-photo-item" @click="switchImageTab('live')">Photo</div>
           </div>
         </div>
         <div class="right-tip" v-else>
