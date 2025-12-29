@@ -129,8 +129,7 @@ const download = async () => {
   try {
     const res = await window.services.downloadVideo(url, type, (downloaded, total) => {
       const progress = (downloaded / total) * 100;
-      console.log(`下载进度: ${progress.toFixed(2)}%`);
-      showToast(`下载进度: ${progress.toFixed(2)}%`);
+      showToast(`下载进度: ${progress.toFixed(0)}%`);
     });
     console.log(res);
     if (res) {
