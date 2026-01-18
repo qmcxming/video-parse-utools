@@ -117,6 +117,18 @@ const showConfirmPopover = ref(false);
 
 const version = ref(packageJson.version);
 
+const allPlatform = [
+  '抖音',
+  '小红书',
+  '即梦',
+  '最右',
+  '快手',
+  '哔哩哔哩',
+  '豆包',
+  '公众号',
+  '皮皮虾'
+];
+
 onMounted(() => {
   downloadPath.value =
     window.utools.dbStorage.getItem('downloadPath') || defaultPath;
@@ -142,6 +154,13 @@ onMounted(() => {
         @click="chooseMenu('about')"
       >
         关于应用
+      </div>
+      <div
+        class="menu-item"
+        :class="{ active: currentMenu === 'platform' }"
+        @click="chooseMenu('platform')"
+      >
+        支持平台
       </div>
       <div
         class="menu-item"
@@ -227,14 +246,23 @@ onMounted(() => {
           </div>
         </div>
       </div>
+      <div v-if="currentMenu === 'platform'" class="platform">
+        <h3>支持平台</h3>
+        <div class="platform-list">
+          <div class="platform-item" v-for="(item, index) in allPlatform" :key="index">
+            {{ item }}
+          </div>
+        </div>
+      </div>
+
       <div v-if="currentMenu === 'history'" class="history">
         <!-- 清空 -->
         <div class="no-data" v-if="history.length === 0">暂无解析记录</div>
         <div class="history-item" v-for="(item, index) in history" :key="index">
           <div class="history-index">{{ index + 1 }}</div>
           <div class="item-top">
-            <div class="item-title" title="点击复制" @click="copyContent(item.content)">
-              {{ item.content }}
+            <div class="item-title" title="点击复制分享链接" @click="copyContent(item.content)">
+              {{ item.data.title || item.content }}
             </div>
             <div class="content-tooltip">
               <div class="content-tooltip-content">{{ item.content }}</div>
@@ -431,7 +459,7 @@ onMounted(() => {
   box-shadow: 0 0 0 1px var(--primary-color);
 }
 
-.about {
+.about, .platform {
   h3 {
     margin-bottom: 15px;
     color: #495057;
@@ -441,6 +469,37 @@ onMounted(() => {
     margin-bottom: 10px;
     color: #6c757d;
     line-height: 1.5;
+  }
+}
+
+.platform {
+  .platform-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .platform-item {
+    padding: 8px 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    color: #495057;
+    font-size: 12px;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    user-select: none;
+
+    .img {
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      border-radius: 4px;
+    }
+  }
+
+  .platform-item:hover {
+    background-color: #e9ecef;
   }
 }
 

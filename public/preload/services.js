@@ -1,4 +1,5 @@
 const fs = require('node:fs')
+const https = require('node:https')
 const path = require('node:path')
 const { parseInfo } = require('./parser');
 
@@ -26,7 +27,7 @@ window.services = {
   async downloadVideo (url, type = 'pic', onProgress, filenameSuffix) {
     const https = require('https');
     const fs = require('fs');
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       // 从URL提取文件名，如果没有则使用时间戳
       let filename = '';
       if (!filename || filename === '/') {
@@ -39,7 +40,8 @@ window.services = {
         const minutes = String(date.getMinutes()).padStart(2, '0');
         const seconds = String(date.getSeconds()).padStart(2, '0');
         const prefix = type === 'video' ? '视频' : '图片';
-        const suffix = type === 'video' ? '.mp4' : '.jpg';
+        const imageType = await this.getImageType(url);
+        const suffix = type === 'video' ? '.mp4' : (imageType === 'gif' ? '.gif' : '.jpg');
         // 兼容多个同时下载，增加自定义后缀
         const moreSuffix = filenameSuffix ? `-${filenameSuffix}` : '';
         filename = `${prefix}${year}${month}${day}-${hours}${minutes}${seconds}${moreSuffix}` + suffix;
@@ -66,6 +68,24 @@ window.services = {
       }).on('error', (err) => {
         fs.unlink(filePath, () => {});
         reject(err);
+      });
+    });
+  },
+  // 根据url判断图片类型
+  async getImageType(url) {
+    return new Promise((resolve) => {
+      const knownTypes = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+        'image/svg+xml': 'svg',
+      };
+      https.get(url, (res) => {
+        const contentType = res.headers['content-type'];
+        resolve(knownTypes[contentType] || 'jpg');
+      }).on('error', () => {
+        resolve('jpg');
       });
     });
   },

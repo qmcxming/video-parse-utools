@@ -5,6 +5,8 @@ const ZuiYouParser = require('./zuiyou');
 const BiliBiliParser = require('./bilibili');
 const KuaishouParser = require('./kuaishou');
 const DouBaoParser = require('./doubao');
+const WxParser = require('./wx');
+const PipixiaParser = require('./pipixia');
 
 /**
  * 解析信息
@@ -25,6 +27,10 @@ async function parseInfo(sharedUrl) {
     return await new KuaishouParser().parse(sharedUrl);
   } else if (sharedUrl.includes('doubao.com')) {
     return await new DouBaoParser().parse(sharedUrl);
+  } if (sharedUrl.includes('mp.weixin.qq.com')) {
+    return await new WxParser().parse(sharedUrl);
+  } if (sharedUrl.includes('pipix.com')) {
+    return await new PipixiaParser().parse(sharedUrl);
   } else {
     throw new Error("暂不支持该平台");
   }
