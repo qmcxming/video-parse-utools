@@ -4,6 +4,7 @@ const { Video, makeRequest, VideoAuthor } = require('./base');
 // https://www.doubao.com/thread/w4fd0c010d0668f1a 图片1
 // https://www.doubao.com/thread/w21583b263a3723ff 图片2
 // https://www.doubao.com/thread/w92d2f8434076e159
+// https://www.doubao.com/thread/aac87757e1bd6 通过豆包的文本生成模式调用图片生成(需要兼容一下)
 
 /**
  * 豆包解析器(当前只持续图片)
@@ -47,8 +48,18 @@ class DouBaoParser {
     if (!messageSnapshot) {
       throw new Error("哎呀，没有找到资源呢，您要不要重新试试呢");
     }
-    const img1ContentStr = messageSnapshot['message_list'][1]['content'];
-    const img1Content = JSON.parse(img1ContentStr);
+    let img1ContentStr = messageSnapshot['message_list'][1]['content'];
+    let img1Content;
+    try {
+      // 若是此处出现解析报错，可以尝试在同级别下的ext的creation_full_content下获取数据
+      img1Content = JSON.parse(img1ContentStr);
+    } catch(e) {
+      img1ContentStr = messageSnapshot['message_list'][1]['ext']['creation_full_content'];
+      img1Content = JSON.parse(img1ContentStr);
+    }
+    if (!img1Content) {
+      throw new Error("未找到图片");
+    }
     if (messageSnapshot['message_list'][1]['content_type'] === 9999) {
       const imgContent = JSON.parse(img1Content[1]['content']);
       const creations = imgContent['creations'];
