@@ -1,6 +1,9 @@
 # 轻溪去水印 uTools
 
 > 根据分享链接提取视频、图集、封面，并实现下载。
+> 插件地址：https://u.tools/plugins/detail/%E8%BD%BB%E6%BA%AA%E5%8E%BB%E6%B0%B4%E5%8D%B0/?c=hj9li3rqmo
+
+![预览图](https://res.u-tools.cn/plugins/previews/EeLeAgOdyZ7DuKVsPho1gr0kMqS0vHBjvgSlpktl.png)
 
 ## 支持平台
 
