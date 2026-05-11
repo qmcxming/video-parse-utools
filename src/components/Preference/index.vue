@@ -7,8 +7,8 @@ import { getAutoOpenConfig, setAutoOpenConfig } from '../../utils/config';
 const props = defineProps({
   showState: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 const emit = defineEmits(['loadData']);
@@ -38,7 +38,9 @@ const onChange = () => {
 const autoOpenChange = () => {
   console.log(autoOpen.value);
   setAutoOpenConfig(autoOpen.value);
-  showToast(autoOpen.value ? '已开启自动打开下载目录' : '已关闭自动打开下载目录');
+  showToast(
+    autoOpen.value ? '已开启自动打开下载目录' : '已关闭自动打开下载目录',
+  );
 };
 
 const selectFolder = () => {
@@ -79,8 +81,8 @@ const themeList = [
   { name: '紫颜悦色', color: '#743ee4' },
   { name: '青翠森林', color: '#43946c' },
   { name: '科技深蓝', color: '#2455EB' },
-  { name: '橘橙之火', color: '#ff7e5f' }
-]
+  { name: '橘橙之火', color: '#ff7e5f' },
+];
 
 const deleteHistory = (index) => {
   console.log(history.value);
@@ -88,7 +90,7 @@ const deleteHistory = (index) => {
   history.value.splice(index, 1);
   window.utools.dbStorage.setItem(
     'history',
-    JSON.parse(JSON.stringify(history.value))
+    JSON.parse(JSON.stringify(history.value)),
   );
 };
 
@@ -98,19 +100,27 @@ const clearHistory = () => {
   showToast('已清空解析记录');
 };
 
-watch(() => props.showState, (newValue) => {
-  if (newValue && currentMenu.value === 'history') {
-    setHistory();
-  }
-})
+watch(
+  () => props.showState,
+  (newValue) => {
+    if (newValue && currentMenu.value === 'history') {
+      setHistory();
+    }
+  },
+);
 
 const setHistory = () => {
   history.value = window.utools.dbStorage.getItem('history') || [];
-}
+};
 
 const copyContent = (content) => {
   window.utools.copyText(content);
   showToast('已复制到剪贴板');
+};
+
+const copyWorkName = (name) => {
+  window.utools.copyText(name);
+  showToast('已复制作品名称，请前往插件市场粘贴搜索下载');
 };
 
 const showConfirmPopover = ref(false);
@@ -126,15 +136,24 @@ const allPlatform = [
   '哔哩哔哩',
   '豆包',
   '公众号',
-  '皮皮虾'
+  '皮皮虾',
 ];
+
+const otherWorks = [
+  '轻译',
+  '文件名读取导出',
+  'NVM Dashboard'
+]
 
 onMounted(() => {
   downloadPath.value =
     window.utools.dbStorage.getItem('downloadPath') || defaultPath;
   setHistory();
   currentTheme.value = window.utools.dbStorage.getItem('theme') || '#0f172a';
-  document.documentElement.style.setProperty('--primary-color', currentTheme.value);
+  document.documentElement.style.setProperty(
+    '--primary-color',
+    currentTheme.value,
+  );
   autoOpen.value = getAutoOpenConfig();
 });
 </script>
@@ -203,16 +222,35 @@ onMounted(() => {
         <div class="setting-item">
           <label for="theme">主题配色</label>
           <div class="theme-dots">
-            <div class="dot" v-for="(item, index) in themeList" :key="index" :class="{ active: currentTheme === item.color }" :style="{ background: item.color }" :title="item.name" @click="changeTheme(item.color)">
+            <div
+              class="dot"
+              v-for="(item, index) in themeList"
+              :key="index"
+              :class="{ active: currentTheme === item.color }"
+              :style="{ background: item.color }"
+              :title="item.name"
+              @click="changeTheme(item.color)"
+            >
               {{ currentTheme === item.color ? '✓' : '' }}
             </div>
-            <input class="color-picker dot" type="color" :value="currentTheme" @change="changeTheme($event.target.value)" title="自定义颜色" />
+            <input
+              class="color-picker dot"
+              type="color"
+              :value="currentTheme"
+              @change="changeTheme($event.target.value)"
+              title="自定义颜色"
+            />
           </div>
         </div>
         <div class="setting-item auto-open">
           <!-- 自动打开目录 -->
           <label for="autoOpen">自动打开下载目录</label>
-          <input v-model="autoOpen" type="checkbox" id="autoOpen" @change="autoOpenChange" />
+          <input
+            v-model="autoOpen"
+            type="checkbox"
+            id="autoOpen"
+            @change="autoOpenChange"
+          />
         </div>
       </div>
       <!-- 关于 -->
@@ -245,11 +283,51 @@ onMounted(() => {
             <img class="img" src="/miniprogram.png" alt="小程序" />
           </div>
         </div>
+        <div class="popover-container">
+          <span class="popover-title">
+            <svg
+              t="1778506735619"
+              class="icon"
+              viewBox="0 0 1024 1024"
+              version="1.1"
+              xmlns="http://www.w3.org/2000/svg"
+              p-id="12122"
+              width="14"
+              height="14"
+            >
+              <path
+                d="M563.2 883.2l288-166.4c12.8-6.4 19.2-19.2 19.2-32V352L582.4 518.4c-6.4 6.4-12.8 6.4-19.2 6.4v358.4z m326.4-633.6c32 19.2 51.2 51.2 51.2 83.2v352c0 38.4-19.2 70.4-51.2 83.2l-307.2 172.8c-32 19.2-70.4 19.2-96 0L179.2 768c-32-19.2-51.2-51.2-51.2-83.2V332.8c0-38.4 19.2-70.4 51.2-83.2l307.2-172.8c32-19.2 70.4-19.2 96 0l307.2 172.8z"
+                fill="currentColor"
+                p-id="12123"
+              ></path>
+            </svg>
+            其他作品
+          </span>
+          <div class="popover-content">
+            <div class="other-work">
+              <div class="other-work-list">
+                <div
+                  v-for="(work, index) in otherWorks"
+                  :key="index"
+                  class="other-work-item"
+                  title="点击复制，前往插件市场搜索下载"
+                  @click="copyWorkName(work)"
+                >
+                  {{ work }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div v-if="currentMenu === 'platform'" class="platform">
         <h3>支持平台</h3>
         <div class="platform-list">
-          <div class="platform-item" v-for="(item, index) in allPlatform" :key="index">
+          <div
+            class="platform-item"
+            v-for="(item, index) in allPlatform"
+            :key="index"
+          >
             {{ item }}
           </div>
         </div>
@@ -261,7 +339,11 @@ onMounted(() => {
         <div class="history-item" v-for="(item, index) in history" :key="index">
           <div class="history-index">{{ index + 1 }}</div>
           <div class="item-top">
-            <div class="item-title" title="点击复制分享链接" @click="copyContent(item.content)">
+            <div
+              class="item-title"
+              title="点击复制分享链接"
+              @click="copyContent(item.content)"
+            >
               {{ item.data.title || item.content }}
             </div>
             <div class="content-tooltip">
@@ -334,7 +416,9 @@ onMounted(() => {
   cursor: pointer;
   font-size: 14px;
   color: #495057;
-  transition: background-color 0.3s, color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
   border-radius: 4px;
   margin: 5px 10px;
 }
@@ -447,7 +531,9 @@ onMounted(() => {
   border: 1px solid #ced4da;
   border-radius: 4px;
   font-size: 14px;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
   box-sizing: border-box;
   padding-right: 30px;
 }
@@ -459,7 +545,8 @@ onMounted(() => {
   box-shadow: 0 0 0 1px var(--primary-color);
 }
 
-.about, .platform {
+.about,
+.platform {
   h3 {
     margin-bottom: 15px;
     color: #495057;
@@ -518,6 +605,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 4px;
+    margin-right: 20px;
 
     .icon {
       margin-top: 2px;
@@ -545,14 +633,63 @@ onMounted(() => {
       width: 120px;
       height: 120px;
     }
+
+    .other-work {
+      width: 120px;
+      height: 120px;
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   .img {
     width: 0;
     height: 0;
     object-fit: cover;
-    transition: width 0.3s, height 0.3s;
+    transition:
+      width 0.3s,
+      height 0.3s;
   }
+
+  .other-work {
+    width: 0;
+    height: 0;
+    font-size: 14px;
+    color: #495057;
+    font-weight: 500;
+    opacity: 0;
+    overflow: hidden;
+    transform: scale(0.94);
+    transform-origin: top center;
+    transition:
+      width 0.3s,
+      height 0.3s,
+      opacity 0.2s,
+      transform 0.3s;
+
+    .other-work-list {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      .other-work-item {
+        padding: 8px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        color: #495057;
+        font-size: 12px;
+        transition: background-color 0.3s;
+        cursor: pointer;
+
+        &:hover {
+          background-color: #e9ecef;
+        }
+      }
+    }
+  }
+
+
 }
 
 .history-toolbar {
@@ -634,7 +771,9 @@ onMounted(() => {
       background-color: #fff;
       border-radius: 4px;
       z-index: 1;
-      transition: transform 0.3s, padding 0.3s;
+      transition:
+        transform 0.3s,
+        padding 0.3s;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       border: 1px solid #e9ecef;
       word-wrap: break-word;
@@ -659,7 +798,9 @@ onMounted(() => {
         border-radius: 3px;
         cursor: pointer;
         font-size: 10px;
-        transition: opacity 0.3s, transform 0.1s;
+        transition:
+          opacity 0.3s,
+          transform 0.1s;
 
         &:hover {
           opacity: 0.9;

@@ -11,7 +11,12 @@
       "explain": "视频去水印",
       "cmds": [
         "去水印",
-        "轻溪"
+        "轻溪",
+        {
+          "type": "regex",
+          "label": "解析分享链接",
+          "match": "/https?:\\/\\/([^\\s/]+\\.)?(douyin\\.com|xiaohongshu\\.com|xhslink\\.com|jianying\\.com|xiaochuankeji\\.cn|bilibili\\.com|b23\\.tv|kuaishou\\.com|doubao\\.com|weixin\\.qq\\.com|pipix\\.com)\\/[^\\s]*/i"
+        }
       ]
     }
   ]

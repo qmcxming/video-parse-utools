@@ -1,17 +1,17 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import Dialog from '../components/Dialog/index.vue';
 import Preference from '../components/Preference/index.vue';
 import ImagePreview from '../components/ImagePreview/index.vue';
 import showToast from '../utils/toast';
 import { getAutoOpenConfig } from '../utils/config';
 
-defineProps({
+const props = defineProps({
   enterAction: {
     type: Object,
     default: () => ({})
   }
-})
+});
 
 const currentTab = ref('video') // 默认显示视频
 const imageTab = ref('pic'); // pic live
@@ -71,7 +71,7 @@ const platformList = [
   {
     id: 'xiaohongshu',
     name: '小红书',
-    content: '估计后面会搓个手书吧 @RURU_茹. http://xhslink.com/o/9JV5cmmuOzg 复制后打开【小红书】查看笔记！【PS: 给妹妹个引流🐒】'
+    content: '20 【估计后面会搓个手书吧 - 雾西.琴子🥐＾ | 小红书 - 你的生活兴趣社区】 😆 bQJsTeqQcknSw4e 😆 https://www.xiaohongshu.com/discovery/item/6922bc11000000001e02f7f3?source=webshare&xhsshare=pc_web&xsec_token=ABfnTsU-BDM8k4gj61JTD8pcHTWRd4brukrgOt3ao4uM8=&xsec_source=pc_share'
   },
   {
     id: 'jimeng',
@@ -286,6 +286,15 @@ const isNotEmpty = (arr, key) => {
   if (!Array.isArray(arr)) return false;
   return arr.some(item => (item[key] !== '' && item[key] !== null && item[key] !== undefined));
 }
+
+onMounted(() => {
+  console.log(props.enterAction);
+  const { payload, type } = props.enterAction;
+  if (props.enterAction && type === 'regex') {
+    content.value = props.enterAction.payload;
+    parseInfo();
+  }
+})
 </script>
 <template>
   <div class="main">

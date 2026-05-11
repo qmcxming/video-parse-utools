@@ -13,7 +13,7 @@ class BiliBiliParser {
    * @returns {Promise<Video>} 视频信息
    */
   async parse(sharedUrl) {
-    const videoId = this.getVideoId(sharedUrl);
+    const videoId = await this.getVideoId(sharedUrl);
     if (!videoId) {
       throw new Error("未找到有效的分享链接");
     }
@@ -52,27 +52,24 @@ class BiliBiliParser {
     return new Video(videoId, title, downloadUrl, cover, [], author)
   }
 
-  getVideoId(url) {
-    const split = url.split("/");
-    // 1、获取域名
-    const domain = split[2];
+  async getVideoId(url) {
+    console.log("解析链接：" + url);
+    const parsedUrl = new URL(url);
+    const domain = parsedUrl.hostname;
     if (domain === "b23.tv") {
       try {
-        const redirectedUrl = getRedirectUrl(url, USER_AGENT);
-        return this.getVideoId(redirectedUrl);
+        const redirectedUrl = await getRedirectUrl(url, USER_AGENT);
+        return await this.getVideoId(redirectedUrl);
       } catch (e) {
         throw new Error(e.message);
       }
     }
-    // 2、video标识
-    const videoSign = split[3];
-    // 3、视频id
-    let videoId = split[4];
+
+    const paths = parsedUrl.pathname.split("/").filter(Boolean);
+    const videoSign = paths[0];
+    const videoId = paths[1];
     if (videoSign === "video") {
-      if (videoId.includes("?")) {
-        videoId = videoId.split("?")[0];
-      }
-      return videoId;
+      return videoId || "";
     }
     return "";
   }
